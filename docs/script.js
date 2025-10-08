@@ -81,6 +81,7 @@ const el = {
   achievementToast: document.getElementById("achievementToast"),
   scoreList: document.getElementById("scoreList"),
   bonusButton: document.getElementById("bonusButton"),
+  bonusPopup: document.getElementById("bonusPopup"),
   startTimedBtn: document.getElementById("startTimedBtn"),
   timedInfo: document.getElementById("timedInfo"),
   startDailyBtn: document.getElementById("startDailyBtn"),
@@ -825,7 +826,14 @@ if (el.backupBtn) {
 // Daily challenge
 el.startDailyBtn.addEventListener("click", () => {
   // Initialize today's challenge if not already set (do NOT force new)
+  const todayKey = new Date().toDateString();
   ensureDaily(false);
+  // Prevent starting more than once per day (use dailyStarted key)
+  const startedKey = localStorage.getItem('dailyStarted');
+  if (startedKey === todayKey) {
+    alert('Vous avez déjà démarré le défi aujourd\'hui.');
+    return;
+  }
   // Prevent starting if already active or already completed today
   if (state.daily.active) {
     alert('Un défi est déjà en cours.');
@@ -838,7 +846,10 @@ el.startDailyBtn.addEventListener("click", () => {
   // Start the daily challenge
   state.daily.active = true;
   state.daily.expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-  el.dailyStatus.textContent = "Statut: en cours (10 min)";
+  try { el.dailyStatus.textContent = "Statut: en cours (10 min)"; } catch(e){}
+  // mark as started for today so it can't be restarted
+  try { localStorage.setItem('dailyStarted', todayKey); } catch(e){}
+  if (el.startDailyBtn) { el.startDailyBtn.disabled = true; el.startDailyBtn.textContent = 'En cours...'; }
   unlockAchievement("📅 Défi quotidien lancé !");
   throttlePersist();
 });
@@ -1135,8 +1146,6 @@ function clearAllScores() {
   displayScores();
 }
 
-// Execute immediate reset as requested
-clearAllScores();
 
 // Persistence
 function persist() {
@@ -1286,8 +1295,23 @@ function ensureDaily(forceNew=false) {
     localStorage.setItem("dailyKey", todayKey);
     throttlePersist();
   } else {
-    el.dailyInfo.textContent = `Objectif du jour: ${state.daily.target} points. Récompense: +${state.daily.rewardPct}% pendant 10 min.`;
-    el.dailyStatus.textContent = state.daily.active ? "Statut: en cours" : "Statut: en attente";
+    try { el.dailyInfo.textContent = `Objectif du jour: ${state.daily.target} points. Récompense: +${state.daily.rewardPct}% pendant 10 min.`; } catch(e){}
+    try { el.dailyStatus.textContent = state.daily.active ? "Statut: en cours" : "Statut: en attente"; } catch(e){}
+    // Update start button state based on whether challenge was started today or already claimed
+    const startedKey = localStorage.getItem('dailyStarted');
+    const todayStarted = (startedKey === todayKey);
+    if (el.startDailyBtn) {
+      if (state.daily.claimedToday) {
+        el.startDailyBtn.disabled = true;
+        el.startDailyBtn.textContent = 'Déjà réussi';
+      } else if (state.daily.active || todayStarted) {
+        el.startDailyBtn.disabled = true;
+        el.startDailyBtn.textContent = 'En cours...';
+      } else {
+        el.startDailyBtn.disabled = false;
+        el.startDailyBtn.textContent = 'Tenter le défi';
+      }
+    }
   }
 }
 
@@ -1303,9 +1327,12 @@ setInterval(() => {
       unlockAchievement(`📅 Défi réussi ! +${state.daily.rewardPct}% pendant 10 min`);
   throttlePersist();
       el.dailyStatus.textContent = "Statut: réussi";
+      // update start button
+      try { if (el.startDailyBtn) { el.startDailyBtn.disabled = true; el.startDailyBtn.textContent = 'Déjà réussi'; } } catch(e){}
     } else if (Date.now() > state.daily.expiresAt && !state.daily.claimedToday) {
       state.daily.active = false;
       el.dailyStatus.textContent = "Statut: expiré";
+      try { if (el.startDailyBtn) { el.startDailyBtn.disabled = false; el.startDailyBtn.textContent = 'Tenter le défi'; } } catch(e){}
     }
   }
 }, 1000);
