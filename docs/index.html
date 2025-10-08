@@ -24,19 +24,28 @@
   <header>
     <div id="bonusPopup" class="bonus-popup" style="display:none;"></div>
     <h1>🎯 Clicker Ultime</h1>
+
     <div class="controls">
-      <label class="toggle">
+      <!-- Interrupteur pour la musique -->
+      <label class="toggle-switch">
         <input type="checkbox" id="musicToggle" />
+        <span class="slider"></span>
         <span>Musique</span>
       </label>
-      <!-- Global music volume slider -->
+    
+      <!-- Curseur pour le volume global -->
       <label class="volume">
         <input type="range" id="volumeSlider" min="0" max="100" value="50" />
       </label>
-      <label class="toggle">
+    
+      <!-- Interrupteur pour les sons -->
+      <label class="toggle-switch">
         <input type="checkbox" id="soundToggle" checked />
+        <span class="slider"></span>
         <span>Sons</span>
       </label>
+    </div>
+
       <select id="themeSelect">
         <option value="default">Thème: Par défaut</option>
         <option value="fire">Thème: Feu</option>

@@ -272,7 +272,7 @@ button {
 .confetti { position: absolute; pointer-events:none; }
 
 /* Thèmes */
-.theme-default { --bg1: #9c9c9c; --bg2: #a777e3; --accent: #ffcc00; }
+.theme-default { --bg1: #707070; --bg2: #a777e3; --accent: #ffcc00; }
 .theme-fire { --bg1: #ff512f; --bg2: #dd2476; --accent: #ffd54f; }
 .theme-ice  { --bg1: #00c6ff; --bg2: #0072ff; --accent: #b2ebf2; }
 .theme-pixel { --bg1: #2c3e50; --bg2: #34495e; --accent: #f1c40f; }
@@ -302,4 +302,49 @@ button {
   10% { opacity: 1; transform: translateY(0); }
   90% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* Style pour le conteneur des interrupteurs */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-right: 15px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: relative;
+  width: 50px;
+  height: 24px;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: background-color 0.4s;
+  margin-right: 8px;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border-radius: 50%;
+  bottom: 3px;
+  left: 3px;
+  transition: transform 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #4caf50;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
 }
