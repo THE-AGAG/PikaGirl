@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<!--
+  FILE: index.html
+  GROUP: Presentation / Static UI
+
+  Notes:
+  - Ce fichier contient la structure HTML et les contrôles visibles.
+  - SAFE TO EDIT: labels, text, order of controls, add/remove buttons, options in <select> (themeSelect, soundTypeSelect),
+    paths to images/audio only if you keep the same relative layout (ex: 'img/...' and 'song/...').
+  - CAUTION: Ne pas renommer les ids utilisés par `script.js` (ex: startBtn, clicker, gameImage, volumeSlider, soundVolumeSlider,
+    musicToggle, soundToggle, saveNowBtn, exportBtn, importBtn, resetScoresBtn, backupBtn, backBtn, pseudo, music, clickSound, critSound,
+    achievementSound). Si vous changez un id, mettez à jour `script.js` en conséquence.
+-->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jeu Clicker complet</title>
+  <!-- Ensure relative paths work correctly when served from a subpath (GitHub Pages) -->
+  <base href="./">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div id="bonusPopup" class="bonus-popup" style="display:none;"></div>
+    <h1>🎯 Clicker Ultime</h1>
+    <div class="controls">
+      <label class="toggle">
+        <input type="checkbox" id="musicToggle" />
+        <span>Musique</span>
+      </label>
+      <!-- Global music volume slider -->
+      <label class="volume">
+        <input type="range" id="volumeSlider" min="0" max="100" value="50" />
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="soundToggle" checked />
+        <span>Sons</span>
+      </label>
+      <select id="themeSelect">
+        <option value="default">Thème: Par défaut</option>
+        <option value="fire">Thème: Feu</option>
+        <option value="ice">Thème: Glace</option>
+        <option value="pixel">Thème: Pixel</option>
+      </select>
+      <select id="keySelect" title="Choose click key">
+        <option value="Space">Key: Space</option>
+        <option value="Enter">Key: Enter</option>
+      </select>
+      <!-- Per-type sound selector + single slider (works before Start) -->
+      <div class="sound-controls">
+        <select id="soundTypeSelect" title="Type de son">
+          <option value="click">Clic</option>
+          <option value="crit">Crit</option>
+          <option value="achievement">Achievement</option>
+          <option value="music">Musique</option>
+        </select>
+        <input type="range" id="soundVolumeSlider" min="0" max="100" value="85" />
+      </div>
+    <div class="save-controls">
+    <button id="saveNowBtn" style="display:none;">💾 Save</button>
+    <button id="exportBtn" style="display:none;">⬇ Export</button>
+    <button id="importBtn" style="display:none;">⬆ Import</button>
+    <input id="importFile" type="file" accept="application/json" style="display:none;" />
+    <button id="resetScoresBtn" style="display:none;">♻ Reset Scores</button>
+  <button id="backupBtn" style="display:none;">📦 Backup</button>
+    <button id="backBtn" style="display:none;">🔙 Back</button>
+  </div>
+    </div>
+  </header>
+
+  <!-- Formulaire pseudo -->
+  <section id="pseudoForm">
+    <label for="pseudo">Entre ton pseudo :</label>
+    <input type="text" id="pseudo" placeholder="Ton pseudo" required />
+    <button id="startBtn">Commencer</button>
+  </section>
+
+  <!-- Zone de jeu -->
+  <main id="gameArea" style="display:none;">
+    <section class="hud">
+      <div id="score">Score : 0</div>
+      <div id="stats">
+        <span id="multiplierStat">x1</span>
+        <span id="autoClickStat">Auto: 0/s</span>
+        <span id="critStat">Crit: 10% (x10)</span>
+        <span id="prestigeStat">Prestige: 0 (+0%)</span>
+      </div>
+    </section>
+
+    <section class="play">
+      <div id="clickZone">
+        <img id="gameImage" src="img/sacha twerk.gif" alt="Image dynamique" />
+        <button class="click-btn" id="clicker">Cliquer !</button>
+        <div id="pressHint" class="press-hint" style="display:none;">Press Space</div>
+        <canvas id="particlesCanvas"></canvas>
+      </div>
+
+      <div class="shop">
+        <button class="upgrade-btn" id="buyAutoClick">Acheter Auto-Click (Coût : 500)</button>
+        <button class="upgrade-btn" id="buyMultiplier">Acheter Multiplicateur (Coût : 1000)</button>
+        <button class="upgrade-btn" id="buyCritChance">Acheter Crit% (Coût : 2000)</button>
+        <button class="upgrade-btn" id="buyCritPower">Acheter Crit x (Coût : 3000)</button>
+        <button class="upgrade-btn" id="buyTempBoost">Boost 30s (Coût : 500)</button>
+        <button class="upgrade-btn prestige" id="doPrestige">Prestige (reset, +10% permanent)</button>
+      </div>
+    </section>
+
+    <section id="modes">
+      <div class="mode-timed">
+        <h3>⏱️ Mode Chronométré (60s)</h3>
+        <button id="startTimedBtn">Démarrer</button>
+        <div id="timedInfo">Temps: 60 | Score: 0 | Meilleur: 0</div>
+      </div>
+      <div class="daily">
+        <h3>📅 Défi quotidien</h3>
+        <div id="dailyInfo">Objectif du jour: 5000 points. Récompense: +5% pour 10 min.</div>
+        <button id="startDailyBtn">Tenter le défi</button>
+        <div id="dailyStatus">Statut: en attente</div>
+      </div>
+    </section>
+
+    <section id="events">
+      <div id="achievementToast" class="toast" style="display:none;"></div>
+    </section>
+
+    <section id="achievements">
+      <h2>🏅 Achievements</h2>
+      <ul id="achievementList"></ul>
+    </section>
+
+    <section id="scoreboard">
+      <h2>🏆 Scoreboard</h2>
+      <ol id="scoreList"></ol>
+    </section>
+  </main>
+
+  <!-- Audio -->
+  <audio id="clickSound" src="song/Item Pickup Pokémon Black #pokemon #soundeffects #shorts.mp3" preload="auto"></audio>
+  <audio id="critSound" src="song/Pokemon (A Button) - Sound Effect (HD).mp3" preload="auto"></audio>
+  <audio id="achievementSound" src="song/[Sound Effect] ErasableNinja Low Health (Pokémon low health).mp3" preload="auto"></audio>
+  <audio id="music" src="song/Area Zero - Pokémon Scarlet and Violet OST (Gamerip).mp3" preload="auto" loop></audio>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+</body>
+</html>

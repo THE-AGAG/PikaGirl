@@ -1,0 +1,288 @@
+/*
+  FILE: style.css
+  GROUP: Styling / Theme
+
+  Notes:
+  - SAFE TO EDIT: color variables in :root (change --bg1, --bg2, --accent), spacing and font-size values,
+    sizes for #gameImage, .click-btn styles, and responsive breakpoints.
+  - SAFE TO ADD: new classes for skins/themes and small animations.
+  - CAUTION: don't remove or rename classes/IDs used by script (eg: .sound-controls, #gameImage, #particlesCanvas,
+    #clickZone, .cps-indicator) unless you also update `script.js`.
+*/
+
+:root {
+  --bg1: #6e8efb;
+  --bg2: #a777e3;
+  --accent: #ffcc00;
+  --text: #ffffff;
+  --panel: rgba(255,255,255,0.12);
+}
+
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 12px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.toggle {
+  display: inline-flex;
+  gap: 6px;
+  background: var(--panel);
+  padding: 6px 10px;
+  border-radius: 8px;
+  align-items: center;
+}
+
+select, button, input[type="text"] {
+  font-size: 1rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+#pseudoForm {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 100px;
+}
+
+#gameArea {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  grid-template-rows: auto auto 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+.hud {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+#score {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+#stats {
+  display: flex;
+  gap: 12px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.play {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+#clickZone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 12px;
+  overflow: hidden;
+}
+
+#particlesCanvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.click-btn {
+  background-color: #fff;
+  color: #6e8efb;
+  font-size: 1.6rem;
+  padding: 16px 28px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  transition: transform 0.08s ease;
+  margin-top: 8px;
+}
+.click-btn:active { transform: scale(0.96); }
+
+/* Hide the visible click button to avoid hold-to-spam exploit; image is clickable instead */
+.click-btn { opacity: 0; height: 0; padding: 0; margin: 0; pointer-events: none; }
+
+.press-hint {
+  margin-top: 8px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.shop {
+  display: grid;
+  gap: 8px;
+}
+
+.upgrade-btn {
+  padding: 12px;
+  background: var(--accent);
+  color: #333;
+  border-radius: 10px;
+  font-weight: 700;
+  transition: filter 0.2s;
+}
+.upgrade-btn:hover { filter: brightness(1.1); }
+.upgrade-btn.prestige { background: #ffd45f; }
+
+#modes {
+  display: grid;
+  gap: 12px;
+}
+
+.mode-timed, .daily {
+  background: var(--panel);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+#events {
+  position: relative;
+}
+
+.bonus {
+  position: absolute;
+  right: 12px;
+  top: -8px;
+  background: #00d48f;
+  color: #203;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 800;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+}
+
+.toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111a;
+  backdrop-filter: blur(6px);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+  z-index: 1000;
+}
+
+#achievements, #scoreboard {
+  background: var(--panel);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+#achievementList, #scoreList {
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* Scoreboard entries: name left, score right */
+#scoreList li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+/* Export/import controls layout */
+.save-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#gameImage {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  user-select: none;
+  transition: transform 160ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+}
+
+/* CPS indicator */
+.cps-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.4);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.volume-controls { display:none; }
+
+/* small confetti placeholder */
+.confetti { position: absolute; pointer-events:none; }
+
+/* Thèmes */
+.theme-default { --bg1: #6e8efb; --bg2: #a777e3; --accent: #ffcc00; }
+.theme-fire { --bg1: #ff512f; --bg2: #dd2476; --accent: #ffd54f; }
+.theme-ice  { --bg1: #00c6ff; --bg2: #0072ff; --accent: #b2ebf2; }
+.theme-pixel { --bg1: #2c3e50; --bg2: #34495e; --accent: #f1c40f; }
+
+@media (max-width: 900px) {
+  #gameArea {
+    grid-template-columns: 1fr;
+  }
+}
+.bonus-popup {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: #00d48f;
+  color: #203;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-weight: bold;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+  z-index: 1000;
+  display: none;
+  animation: fadeInOut 3s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
