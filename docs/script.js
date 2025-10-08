@@ -824,7 +824,18 @@ if (el.backupBtn) {
 
 // Daily challenge
 el.startDailyBtn.addEventListener("click", () => {
-  ensureDaily(true);
+  // Initialize today's challenge if not already set (do NOT force new)
+  ensureDaily(false);
+  // Prevent starting if already active or already completed today
+  if (state.daily.active) {
+    alert('Un défi est déjà en cours.');
+    return;
+  }
+  if (state.daily.claimedToday) {
+    alert('Vous avez déjà réussi le défi aujourd\'hui.');
+    return;
+  }
+  // Start the daily challenge
   state.daily.active = true;
   state.daily.expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
   el.dailyStatus.textContent = "Statut: en cours (10 min)";
@@ -1256,13 +1267,8 @@ function monitorAudio(elAudio, name) {
 // Populate scoreboard on load
 displayScores();
 
-// Auto save
-setInterval(() => {
-  if (state.pseudo) {
-    saveScore();
-    throttlePersist();
-  }
-}, 10000);
+// Auto save removed: scores are now saved only when the user clicks the Save button
+// (prevents automatic scoreboard updates during gameplay)
 
 // Daily
 function ensureDaily(forceNew=false) {
