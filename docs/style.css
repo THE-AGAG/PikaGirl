@@ -20,6 +20,7 @@
 
 body {
   margin: 0;
+  font-size: 20px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 900;
   color: var(--text);
@@ -58,6 +59,22 @@ select, button, input[type="text"] {
   border-radius: 8px;
   border: none;
 }
+
+.butt {
+  color: white;
+  background-color: rgb(62, 57, 57);
+  transition: all 0.3s ease; 
+}
+
+.butt:hover {
+  background-color: rgb(62, 57, 57);
+  transform: scale(1.2);
+}
+
+.butt:active {
+  transform: scale(1.1); 
+}
+
 
 button {
   cursor: pointer;
@@ -255,7 +272,7 @@ button {
 .confetti { position: absolute; pointer-events:none; }
 
 /* Thèmes */
-.theme-default { --bg1: #6e8efb; --bg2: #a777e3; --accent: #ffcc00; }
+.theme-default { --bg1: #9c9c9c; --bg2: #a777e3; --accent: #ffcc00; }
 .theme-fire { --bg1: #ff512f; --bg2: #dd2476; --accent: #ffd54f; }
 .theme-ice  { --bg1: #00c6ff; --bg2: #0072ff; --accent: #b2ebf2; }
 .theme-pixel { --bg1: #2c3e50; --bg2: #34495e; --accent: #f1c40f; }
