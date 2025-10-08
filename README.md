@@ -2,7 +2,7 @@
 
 Bienvenue dans le dépôt du jeu Clicker PikaGirl.
 
-- Site en ligne : [Clicker PikaGirl](https://the-agag.github.io/PikaGirl/)
+- Site en ligne : [Clicker PikaGirl](the-agag.github.io/PikaGirl/)
 
 ## Description
 
@@ -36,5 +36,6 @@ L'objectif est d'apprendre à concevoir une petite application web interactive, 
 ## Remarques pour le cours
 
 Ce dépôt sert de base pour des travaux pratiques. Suggestions d'améliorations pédagogiques : stockage des joueurs dans un JSON ou base de données, refactorisation du CSS, ajout de tests, et accessibilité.
+
 
 
