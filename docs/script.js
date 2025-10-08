@@ -497,16 +497,32 @@ document.addEventListener('keydown', (e) => {
 
 // Export/import save (client-side JSON)
 el.exportBtn.addEventListener('click', () => {
-  const data = localStorage.getItem('clickerState') || JSON.stringify(state);
-  const blob = new Blob([data], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `clicker-save-${new Date().toISOString()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  // Build an export object with full game state but without audio settings
+  try {
+    const exportState = JSON.parse(JSON.stringify(state)); // shallow clone
+  // Remove audio-related keys to avoid exporting user audio preferences
+  delete exportState.soundVolumes;
+  delete exportState.soundType;
+  delete exportState.musicOn;
+  delete exportState.soundOn;
+  // Also remove legacy 'volumes' map if present
+  if (exportState.volumes) delete exportState.volumes;
+    // Include scoreboard separately
+    const scores = JSON.parse(localStorage.getItem('scores') || '[]');
+    const toExport = { exportedAt: new Date().toISOString(), state: exportState, scores };
+    const data = JSON.stringify(toExport, null, 2);
+    const blob = new Blob([data], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `clicker-save-${new Date().toISOString()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Erreur lors de la création de l\'export');
+  }
 });
 el.importBtn.addEventListener('click', () => {
   try { el.importFile.click(); } catch (e) {}
@@ -518,12 +534,23 @@ el.importFile.addEventListener('change', (ev) => {
   reader.onload = (e) => {
     try {
       const parsed = JSON.parse(e.target.result);
-      // Merge minimally
-  Object.assign(state, parsed);
-  throttlePersist();
-  loadPersisted();
-  scheduleUpdateUI();
-  displayScores();
+      // Support new export structure { exportedAt, state, scores }
+      const incomingState = parsed && parsed.state ? parsed.state : parsed;
+      // Merge incoming state but skip audio-related keys
+  const skip = new Set(['soundVolumes','soundType','musicOn','soundOn','volumes']);
+      for (const k of Object.keys(incomingState || {})) {
+        if (skip.has(k)) continue;
+        try { state[k] = incomingState[k]; } catch (e) {}
+      }
+      // If the file contains scores array, replace local scores
+      if (parsed && Array.isArray(parsed.scores)) {
+        try { localStorage.setItem('scores', JSON.stringify(parsed.scores)); } catch (e) {}
+      }
+      // Persist minimal state (pseudo + score) and update UI
+      throttlePersist();
+      loadPersisted();
+      scheduleUpdateUI();
+      displayScores();
       alert('Import successful');
     } catch (err) { alert('Invalid import file'); }
   };
