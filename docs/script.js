@@ -82,6 +82,11 @@ const el = {
   scoreList: document.getElementById("scoreList"),
   bonusButton: document.getElementById("bonusButton"),
   bonusPopup: document.getElementById("bonusPopup"),
+  volumeSlider: document.getElementById('volumeSlider'),
+  soundTypeSelect: document.getElementById('soundTypeSelect'),
+  soundVolumeSlider: document.getElementById('soundVolumeSlider'),
+  backupBtn: document.getElementById('backupBtn'),
+  clickZone: document.getElementById('clickZone'),
   startTimedBtn: document.getElementById("startTimedBtn"),
   timedInfo: document.getElementById("timedInfo"),
   startDailyBtn: document.getElementById("startDailyBtn"),
@@ -102,6 +107,33 @@ const el = {
   achievementSound: document.getElementById("achievementSound"),
   music: document.getElementById("music"),
 };
+
+// Toast helper (non-blocking notifications). Uses #toastContainer if present, otherwise falls back to alert.
+function showToast(text, opts={timeout:3000}){
+  try{
+    const container = document.getElementById('toastContainer');
+    if (!container) throw new Error('no container');
+    const t = document.createElement('div');
+    t.textContent = text;
+    t.style.background = 'rgba(0,0,0,0.8)';
+    t.style.color = '#fff';
+    t.style.padding = '8px 12px';
+    t.style.marginTop = '8px';
+    t.style.borderRadius = '6px';
+    t.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    t.style.pointerEvents = 'auto';
+    container.appendChild(t);
+    setTimeout(()=>{
+      try{ t.style.transition = 'opacity 300ms'; t.style.opacity = '0'; setTimeout(()=>t.remove(),300);}catch(e){}
+    }, opts.timeout || 3000);
+    return;
+  }catch(e){
+    try{ alert(text); }catch(e){}
+  }
+}
+
+// Cache CPS indicator element (may be created later on start)
+let __cpsEl = document.querySelector('.cps-indicator') || null;
 
 // Inactivity timer: when no click happens for 1s, revert the main image to base
 let __inactivityTimer = null;
@@ -180,8 +212,8 @@ if (volumeSlider) {
       state.soundVolumes = state.soundVolumes || {};
       state.soundVolumes.music = v;
       // if the user is currently editing the 'music' type with the other slider, keep it in sync
-      const other = document.getElementById('soundTypeSelect');
-      const otherSlider = document.getElementById('soundVolumeSlider');
+  const other = el.soundTypeSelect;
+  const otherSlider = el.soundVolumeSlider;
       if (other && other.value === 'music' && otherSlider) otherSlider.value = Math.round(v * 100);
       throttlePersist();
     } catch (e) {}
@@ -195,8 +227,8 @@ function initVolumeControls() {
     try { loadPersisted(); } catch(e) {}
     // DOM references
     const globalVol = document.getElementById('volumeSlider');
-    const typeSel = document.getElementById('soundTypeSelect');
-    const volSlider = document.getElementById('soundVolumeSlider');
+  const typeSel = el.soundTypeSelect;
+  const volSlider = el.soundVolumeSlider;
 
     // Ensure soundVolumes exists in state
     if (!state.soundVolumes) state.soundVolumes = { ...volumes };
@@ -308,31 +340,7 @@ function setVolumeUIForGame(inGame) {
 
 // default: not in game yet
 try { setVolumeUIForGame(false); } catch (e) {}
-// Prepare audio on first Start button click (unlock audio reliably)
-if (el.startBtn) {
-  el.startBtn.addEventListener("click", () => {
-    const clickSound = el.clickSound;
-    const critSound = el.critSound;
-    const achievementSound = el.achievementSound;
-
-    [clickSound, critSound, achievementSound].forEach(s => {
-      if (!s) return;
-      try { 
-        // make achievement sound quieter than click/crit
-        s.volume = (s === achievementSound) ? 0.25 : 0.5;
-      } catch (e) {}
-      try { s.play().then(() => s.pause()).catch(()=>{}); } catch (e) {}
-    });
-
-    // Start music if toggle is on
-    if (el.music && el.musicToggle && el.musicToggle.checked) {
-      try { el.music.volume = (document.getElementById("volumeSlider")?.value || 50) / 100; } catch (e) {}
-      try { el.music.play().catch(()=>{}); } catch (e) {}
-    }
-  });
-}
-  // Sounds are preloaded above (played+paused to "unlock" on user gesture).
-  // Don't attempt to play a click/crit sound here (no isCrit context).
+// Note: audio unlock logic handled during startup (unlockAudio()) to avoid duplicate listeners
 
 
 // Startup
@@ -340,7 +348,7 @@ el.startBtn.addEventListener("click", () => {
   try { initVolumeControls(); } catch(e) {}
   const p = el.pseudoInput.value.trim();
   if (!p) {
-    alert("Le pseudo est obligatoire !");
+    showToast("Le pseudo est obligatoire !");
     return;
   }
   state.pseudo = p;
@@ -361,8 +369,8 @@ el.startBtn.addEventListener("click", () => {
   }
   // Wire sound type select + single volume slider
   try {
-    const typeSel = document.getElementById('soundTypeSelect');
-    const volSlider = document.getElementById('soundVolumeSlider');
+  const typeSel = el.soundTypeSelect;
+  const volSlider = el.soundVolumeSlider;
     // ensure state.soundVolumes exists
     // First, restore persisted state so UI uses saved values
     try { loadPersisted(); } catch(e) {}
@@ -451,7 +459,7 @@ el.startBtn.addEventListener("click", () => {
               state.currentSkin = s.id;
               el.gameImage.src = s.src;
               throttlePersist(); scheduleUpdateUI();
-            } else alert('Pas assez de points pour acheter ce skin.');
+            } else showToast('Pas assez de points pour acheter ce skin.');
           } else {
             state.currentSkin = s.id;
             el.gameImage.src = s.src;
@@ -522,7 +530,7 @@ el.exportBtn.addEventListener('click', () => {
     a.remove();
     URL.revokeObjectURL(url);
   } catch (e) {
-    alert('Erreur lors de la création de l\'export');
+    showToast('Erreur lors de la création de l\'export');
   }
 });
 el.importBtn.addEventListener('click', () => {
@@ -552,8 +560,8 @@ el.importFile.addEventListener('change', (ev) => {
       loadPersisted();
       scheduleUpdateUI();
       displayScores();
-      alert('Import successful');
-    } catch (err) { alert('Invalid import file'); }
+      showToast('Import successful');
+  } catch (err) { showToast('Invalid import file'); }
   };
   reader.readAsText(f);
 });
@@ -681,7 +689,7 @@ el.upgradeAuto.addEventListener("click", () => {
     checkUpgradeAchievements();
     scheduleUpdateUI();
     throttlePersist();
-  } else alert("Pas assez de points !");
+  } else showToast("Pas assez de points !");
 });
 
 el.upgradeMult.addEventListener("click", () => {
@@ -692,7 +700,7 @@ el.upgradeMult.addEventListener("click", () => {
     checkUpgradeAchievements();
     scheduleUpdateUI();
     throttlePersist();
-  } else alert("Pas assez de points !");
+  } else showToast("Pas assez de points !");
 });
 
 el.upgradeCritChance.addEventListener("click", () => {
@@ -704,7 +712,7 @@ el.upgradeCritChance.addEventListener("click", () => {
     scheduleUpdateUI();
     throttlePersist();
   } else {
-    alert("Pas assez de points !");
+    showToast("Pas assez de points !");
   }
 });
 
@@ -716,7 +724,7 @@ el.upgradeCritPower.addEventListener("click", () => {
     state.critPowerCost = Math.floor(state.critPowerCost * 2);
     scheduleUpdateUI();
     throttlePersist();
-  } else alert("Pas assez de points !");
+  } else showToast("Pas assez de points !");
 });
 
 el.upgradeTempBoost.addEventListener("click", () => {
@@ -726,13 +734,13 @@ el.upgradeTempBoost.addEventListener("click", () => {
     state.tempBoostEnd = Date.now() + 30000; // 30s
     scheduleUpdateUI();
     throttlePersist();
-  } else alert("Pas assez de points !");
+  } else showToast("Pas assez de points !");
 });
 
 el.doPrestige.addEventListener("click", () => {
   // Verify cost
   if (state.score < (state.prestigeCost || 20000)) {
-    alert(`Pas assez de points pour effectuer un prestige. Coût : ${state.prestigeCost}`);
+    showToast(`Pas assez de points pour effectuer un prestige. Coût : ${state.prestigeCost}`);
     return;
   }
   if (!confirm(`Prestige coûte ${state.prestigeCost} points et réinitialisera la progression. Continuer ?`)) return;
@@ -818,8 +826,8 @@ if (el.backupBtn) {
     try {
       const key = `clicker_backup_${new Date().toISOString()}`;
       localStorage.setItem(key, localStorage.getItem('clickerState') || JSON.stringify(state));
-      alert(`Backup créé: ${key}`);
-    } catch (e) { alert('Erreur lors de la création du backup'); }
+      showToast(`Backup créé: ${key}`);
+  } catch (e) { showToast('Erreur lors de la création du backup'); }
   });
 }
 
@@ -831,16 +839,16 @@ el.startDailyBtn.addEventListener("click", () => {
   // Prevent starting more than once per day (use dailyStarted key)
   const startedKey = localStorage.getItem('dailyStarted');
   if (startedKey === todayKey) {
-    alert('Vous avez déjà démarré le défi aujourd\'hui.');
+    showToast('Vous avez déjà démarré le défi aujourd\'hui.');
     return;
   }
   // Prevent starting if already active or already completed today
   if (state.daily.active) {
-    alert('Un défi est déjà en cours.');
+    showToast('Un défi est déjà en cours.');
     return;
   }
   if (state.daily.claimedToday) {
-    alert('Vous avez déjà réussi le défi aujourd\'hui.');
+    showToast('Vous avez déjà réussi le défi aujourd\'hui.');
     return;
   }
   // Start the daily challenge
@@ -872,7 +880,8 @@ setInterval(() => {
     scheduleUpdateUI();
   }
   // End boost
-  if (state.tempBoostActive && Date.now() > state.tempBoostEnd) {
+  const nowAuto = Date.now();
+  if (state.tempBoostActive && nowAuto > state.tempBoostEnd) {
     state.tempBoostActive = false;
     unlockAchievement("⚡ Fin du boost de 30s.");
     scheduleUpdateUI();
@@ -1056,17 +1065,20 @@ function computeAndDisplayCPS() {
   // Remove timestamps older than 1s
   __clickTimes = __clickTimes.filter(t => now - t <= 1000);
   const cps = __clickTimes.length;
-  const elC = document.querySelector('.cps-indicator');
-  if (elC) elC.textContent = `CPS: ${cps}`;
+  if (!__cpsEl) __cpsEl = document.querySelector('.cps-indicator');
+  if (__cpsEl) __cpsEl.textContent = `CPS: ${cps}`;
   // achievements: if CPS high
   // SAFE TO EDIT: CPS achievement threshold
   if (cps >= 12) unlockAchievement('⚡ Frenzy: 12 CPS atteint !');
 }
-setInterval(computeAndDisplayCPS, 250);
+setInterval(computeAndDisplayCPS, 500);
 
 // Particles
-const ctx = el.particlesCanvas.getContext("2d");
+let ctx = null;
 let particles = [];
+if (el.particlesCanvas) {
+  try { ctx = el.particlesCanvas.getContext("2d"); } catch(e) { ctx = null; }
+}
 function resizeCanvas() {
   el.particlesCanvas.width = el.particlesCanvas.clientWidth;
   el.particlesCanvas.height = el.particlesCanvas.clientHeight;
@@ -1090,6 +1102,7 @@ function spawnParticles(color="#fff") {
   }
 }
 function renderParticles() {
+  if (!ctx || !el.particlesCanvas) return;
   ctx.clearRect(0,0,el.particlesCanvas.width, el.particlesCanvas.height);
   particles.forEach(p => {
     ctx.globalAlpha = Math.max(0, p.life/60);
@@ -1105,7 +1118,7 @@ function renderParticles() {
   particles = particles.filter(p => p.life > 0);
   requestAnimationFrame(renderParticles);
 }
-renderParticles();
+if (ctx) renderParticles();
 
 // Scoreboard
 function saveScore() {
@@ -1246,8 +1259,8 @@ function loadPersisted() {
       try {
         const globalVol = document.getElementById('volumeSlider');
         if (globalVol && typeof volumes.music === 'number') globalVol.value = Math.round(volumes.music * 100);
-        const typeSel = document.getElementById('soundTypeSelect');
-        const volSlider = document.getElementById('soundVolumeSlider');
+  const typeSel = el.soundTypeSelect;
+  const volSlider = el.soundVolumeSlider;
         if (typeSel) typeSel.value = state.soundType || 'click';
         if (typeSel && volSlider) {
           const sel = typeSel.value || state.soundType || 'click';
@@ -1317,22 +1330,23 @@ function ensureDaily(forceNew=false) {
 
 // Daily challenge tick
 setInterval(() => {
-  if (state.daily.active) {
-    if (state.score >= state.daily.target && !state.daily.claimedToday) {
-      state.daily.claimedToday = true;
-      state.daily.active = false;
-      state.daily.expiresAt = Date.now() + 10*60*1000;
-      state.tempBoostActive = true;
-      state.tempBoostEnd = state.daily.expiresAt;
-      unlockAchievement(`📅 Défi réussi ! +${state.daily.rewardPct}% pendant 10 min`);
-  throttlePersist();
-      el.dailyStatus.textContent = "Statut: réussi";
-      // update start button
-      try { if (el.startDailyBtn) { el.startDailyBtn.disabled = true; el.startDailyBtn.textContent = 'Déjà réussi'; } } catch(e){}
-    } else if (Date.now() > state.daily.expiresAt && !state.daily.claimedToday) {
-      state.daily.active = false;
-      el.dailyStatus.textContent = "Statut: expiré";
-      try { if (el.startDailyBtn) { el.startDailyBtn.disabled = false; el.startDailyBtn.textContent = 'Tenter le défi'; } } catch(e){}
-    }
+  if (!state.daily.active) return;
+  const nowDaily = Date.now();
+  if (state.score >= state.daily.target && !state.daily.claimedToday) {
+    state.daily.claimedToday = true;
+    state.daily.active = false;
+    state.daily.expiresAt = nowDaily + 10*60*1000;
+    state.tempBoostActive = true;
+    state.tempBoostEnd = state.daily.expiresAt;
+    unlockAchievement(`📅 Défi réussi ! +${state.daily.rewardPct}% pendant 10 min`);
+    throttlePersist();
+    el.dailyStatus.textContent = "Statut: réussi";
+    try { if (el.startDailyBtn) { el.startDailyBtn.disabled = true; el.startDailyBtn.textContent = 'Déjà réussi'; } } catch(e){}
+    return;
+  }
+  if (nowDaily > state.daily.expiresAt && !state.daily.claimedToday) {
+    state.daily.active = false;
+    el.dailyStatus.textContent = "Statut: expiré";
+    try { if (el.startDailyBtn) { el.startDailyBtn.disabled = false; el.startDailyBtn.textContent = 'Tenter le défi'; } } catch(e){}
   }
 }, 1000);
