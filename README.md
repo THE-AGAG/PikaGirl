@@ -2,7 +2,7 @@
 
 Bienvenue dans le dépôt du jeu Clicker PikaGirl.
 
-- Site en ligne : [Clicker PikaGirl](the-agag.github.io/PikaGirl/)
+- Site en ligne : [Clicker PikaGirl](https://the-agag.github.io/PikaGirl)
 
 ## Description
 
