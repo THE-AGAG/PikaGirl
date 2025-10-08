@@ -15,7 +15,7 @@ Clicker PikaGirl est un petit jeu web de type "clicker" développé en HTML, CSS
 
 ## Objectif pédagogique
 
-L'objectif est d'apprendre à concevoir une petite application web interactive, à organiser les fichiers d'un projet front-end, et à manipuler le DOM et des événements utilisateur (clics, enregistrements de score). Le projet est volontairement simple pour rester accessible en heures de cours.
+L'objectif est d'apprendre à concevoir une petite application web interactive, à organiser les fichiers d'un projet front-end et des événements utilisateur (clics, enregistrements de score). Le projet est volontairement simple pour rester accessible en heures de cours.
 
 ## Accès
 
@@ -36,4 +36,5 @@ L'objectif est d'apprendre à concevoir une petite application web interactive, 
 ## Remarques pour le cours
 
 Ce dépôt sert de base pour des travaux pratiques. Suggestions d'améliorations pédagogiques : stockage des joueurs dans un JSON ou base de données, refactorisation du CSS, ajout de tests, et accessibilité.
+
 
