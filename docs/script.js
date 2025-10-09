@@ -27,19 +27,19 @@ const state = {
   score: 0,
   totalClicks: 0,
   autoClickers: 0,
-  autoClickCost: 500,
+  autoClickCost: 50,
   multiplier: 1,
-  multiplierCost: 1000,
+  multiplierCost: 200,
   critChance: 0.02,       // 2%
   critPower: 5,          // x5
-  critChanceCost: 2000,
-  critPowerCost: 3000,
+  critChanceCost: 500,
+  critPowerCost: 800,
   tempBoostActive: false,
   tempBoostEnd: 0,
-  tempBoostCost: 500,
+  tempBoostCost: 100,
   prestigeCount: 0,
   prestigeBonus: 0,       // +% permanent
-  prestigeCost: 20000,    // coût initial pour effectuer un prestige
+  prestigeCost: 5000,    // coût initial pour effectuer un prestige
   lastClickTime: 0,
   bestTimed: 0,
   timedActive: false,
@@ -187,19 +187,19 @@ document.addEventListener("click", tryPlayMusic, { once: true });
 document.addEventListener("keydown", tryPlayMusic, { once: true });
 
 function tryPlayMusic() {
-  const music = document.getElementById("music");
-  const musicToggle = document.getElementById("musicToggle");
-  if (musicToggle.checked) {
-    music.play().catch(err => console.warn("Lecture bloquée :", err));
+  const musicEl = el.music;
+  const musicToggle = el.musicToggle;
+  if (musicToggle && musicToggle.checked) {
+    try { musicEl.play().catch(err => console.warn("Lecture bloquée :", err)); } catch(e){}
   }
 }
-const volumeSlider = document.getElementById("volumeSlider");
-const music = document.getElementById("music");
+const volumeSlider = el.volumeSlider;
+const music = el.music;
 
 // Appliquer le volume initial
 // Apply initial music volume from saved value if any, otherwise from slider default
 try {
-  music.volume = (volumes.music !== undefined) ? volumes.music : (volumeSlider.value / 100);
+  try { if (music) music.volume = (volumes.music !== undefined) ? volumes.music : (volumeSlider && volumeSlider.value ? volumeSlider.value / 100 : 0.5); } catch(e){}
 } catch (e) { /* ignore if element missing */ }
 
 // Mettre à jour le volume en temps réel et persister le choix
@@ -662,9 +662,41 @@ el.clickButton.addEventListener("click", () => {
   // Sounds
   if (state.soundOn) {
     const s = (isCrit ? el.critSound : el.clickSound);
-    try { s.currentTime = 0; } catch (e) {}
-    const p = s.play();
-    if (p && typeof p.then === 'function') p.catch(() => { /* playback blocked */ });
+    if (!s) {
+      console.warn('Audio element missing for click/crit');
+    } else {
+      try { s.currentTime = 0; } catch (e) {}
+      try {
+        const p = s.play && s.play();
+        if (p && typeof p.then === 'function') {
+          p.catch(() => {
+            // Fallback: try to play via a transient Audio() instance using the same src
+            try {
+              const src = s.src || (isCrit ? (el.critSound && el.critSound.src) : (el.clickSound && el.clickSound.src));
+              if (!src) return;
+              const fallback = new Audio(src);
+              fallback.preload = 'auto';
+              // apply per-type volume if available
+              const vol = isCrit ? (volumes.crit || 0.5) : (volumes.click || 0.85);
+              try { fallback.volume = vol; } catch(e){}
+              fallback.play().catch(()=>{/* ignore fallback failures */});
+            } catch (e) { /* ignore */ }
+          });
+        }
+      } catch (e) {
+        // Last resort: create Audio and try
+        try {
+          const src = s.src || (isCrit ? (el.critSound && el.critSound.src) : (el.clickSound && el.clickSound.src));
+          if (src) {
+            const fallback = new Audio(src);
+            fallback.preload = 'auto';
+            const vol = isCrit ? (volumes.crit || 0.5) : (volumes.click || 0.85);
+            try { fallback.volume = vol; } catch(e){}
+            fallback.play().catch(()=>{});
+          }
+        } catch (ee) {}
+      }
+    }
   }
 
   spawnParticles(isCrit ? "#ffd700" : "#ffffff");
