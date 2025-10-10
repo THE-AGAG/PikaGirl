@@ -272,10 +272,10 @@ button {
 .confetti { position: absolute; pointer-events:none; }
 
 /* Thèmes */
-.theme-default { --bg1: #707070; --bg2: #a877e375; --accent: #ffcc00; }
-.theme-fire { --bg1: #ff512f; --bg2: #dd2476; --accent: #ffd54f; }
-.theme-ice  { --bg1: #00c6ff; --bg2: #0072ff; --accent: #b2ebf2; }
-.theme-pixel { --bg1: #2c3e50; --bg2: #34495e; --accent: #f1c40f; }
+.theme-normal { --bg1: #707070; --bg2: #a877e375; --accent: #ffcc00; }
+.theme-feu { --bg1: #ff512f; --bg2: #dd2476; --accent: #ffd54f; }
+.theme-glace  { --bg1: #00c6ff; --bg2: #0072ff; --accent: #b2ebf2; }
+.theme-BW { --bg1: #272727; --bg2: #d4d4d4; --accent: #f1c40f; }
 
 
 .custom-select {
