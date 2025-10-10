@@ -23,37 +23,48 @@
 <body>
   <header>
     <h1>🎯 Clicker Ultime</h1>
-    <div class="controls">
-      <!-- Interrupteur pour la musique -->
-      <label class="toggle-switch">
-        <input type="checkbox" id="musicToggle" />
-        <span class="slider"></span>
-        <span>Musique</span>
-      </label>
+
+<div class="controls"> <!-- Interrupteur pour la musique --> 
+  <label class="toggle-switch"> 
+    <input type="checkbox" id="musicToggle" /> 
+    <span class="slider"></span> 
+    <span>Musique</span> 
+  </label>
     
       <!-- Curseur pour le volume global -->
-      <label class="volume">
-        <input type="range" id="volumeSlider" min="0" max="100" value="50" />
-      </label>
+<label class="volume">
+  <input type="range" id="volumeSlider" min="0" max="100" value="50" />
+</label>
     
       <!-- Interrupteur pour les sons -->
-      <label class="toggle-switch">
-        <input type="checkbox" id="soundToggle" checked />
-        <span class="slider"></span>
-        <span>Sons</span>
-      </label>
-    </div>
+  <label class="toggle-switch">
+    <input type="checkbox" id="soundToggle" checked />
+    <span class="slider"></span>
+    <span>Sons</span>
+  </label>
+</div>
 
-      <select id="themeSelect">
-        <option value="default">Thème: Par défaut</option>
-        <option value="fire">Thème: Feu</option>
-        <option value="ice">Thème: Glace</option>
-        <option value="pixel">Thème: Pixel</option>
-      </select>
-      <select id="keySelect" title="Choose click key">
-        <option value="Space">Key: Space</option>
-        <option value="Enter">Key: Enter</option>
-      </select>
+
+<div class="custom-select" id="themeSelect">
+  <div class="selected">
+    <span>🔥Thème🧊</span>
+  </div>
+  <ul class="options">
+    <li data-value="default"><img src="img/normal.png" alt="">Normal</li>
+    <li data-value="fire"><img src="img/feu.png" alt="">Feu</li>
+    <li data-value="ice"><img src="img/glace.png" alt="">Glace</li>
+    <li data-value="pixel"><img src="img/pixel.png" alt="">Pixel</li>
+  </ul>
+</div>
+
+
+
+
+<select id="keySelect" title="Choose click key">
+  <option value="Space">Key: Space</option>
+  <option value="Enter">Key: Enter</option>
+</select>
+
       <!-- Per-type sound selector + single slider (works before Start) -->
       <div class="sound-controls">
         <select id="soundTypeSelect" title="Type de son">

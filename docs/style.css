@@ -272,10 +272,73 @@ button {
 .confetti { position: absolute; pointer-events:none; }
 
 /* Thèmes */
-.theme-default { --bg1: #707070; --bg2: #a777e3; --accent: #ffcc00; }
+.theme-default { --bg1: #707070; --bg2: #a877e375; --accent: #ffcc00; }
 .theme-fire { --bg1: #ff512f; --bg2: #dd2476; --accent: #ffd54f; }
 .theme-ice  { --bg1: #00c6ff; --bg2: #0072ff; --accent: #b2ebf2; }
 .theme-pixel { --bg1: #2c3e50; --bg2: #34495e; --accent: #f1c40f; }
+
+
+.custom-select {
+  position: relative;
+  width: max-content;
+  user-select: none;
+  font-family: sans-serif;
+}
+
+.custom-select .selected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--panel, #eee);
+  cursor: pointer;
+}
+
+.custom-select img {
+  width: 70px;
+  height: 15px;
+}
+
+.custom-select .options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--panel, #eee);
+  border-radius: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  z-index: 10;
+
+  /* Animation des thèmes */
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.custom-select.open .options {
+  max-height: 500px; 
+  opacity: 1;
+}
+
+
+
+.custom-select .options li {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.custom-select.open .options {
+  display: block;
+}
+
+
+
 
 @media (max-width: 900px) {
   #gameArea {

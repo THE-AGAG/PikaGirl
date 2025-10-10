@@ -593,7 +593,7 @@ el.musicToggle.addEventListener("change", () => {
   state.musicOn = el.musicToggle.checked;
   if (state.musicOn) {
     const p = el.music.play();
-    if (p && typeof p.then === 'function') p.catch(() => { /* ignore playback denied */ });
+    if (p && typeof p.then === 'function') p.catch(() => { });
   } else {
     try { el.music.pause(); } catch (e) {}
   }
@@ -603,16 +603,45 @@ el.soundToggle.addEventListener("change", () => {
   state.soundOn = el.soundToggle.checked;
   throttlePersist();
 });
-el.themeSelect.addEventListener("change", () => {
-  state.theme = el.themeSelect.value;
-  setTheme(state.theme);
-  throttlePersist();
+
+const customSelect = document.getElementById("themeSelect");
+const selected = customSelect.querySelector(".selected");
+const options = customSelect.querySelectorAll(".options li");
+
+selected.addEventListener("click", () => {
+  customSelect.classList.toggle("open");
 });
-function setTheme(name) {
-  document.body.classList.remove("theme-default","theme-fire","theme-ice","theme-pixel");
-  document.body.classList.add(`theme-${name}`);
-}
-setTheme("default");
+
+options.forEach(opt => {
+  opt.addEventListener("click", () => {
+    const img = opt.querySelector("img").src;
+    const text = opt.textContent;
+    const value = opt.dataset.value;
+
+    // Nettoyer le contenu du .selected
+    selected.innerHTML = "";
+
+    // Ajout d'une image seulement après sélection
+    const newImg = document.createElement("img");
+    newImg.src = img;
+    newImg.alt = "";
+    selected.appendChild(newImg);
+
+    // Ajouter le texte
+    const span = document.createElement("span");
+    span.textContent = text;
+    selected.appendChild(span);
+
+    customSelect.classList.remove("open");
+
+    // Mettre à jour le thème
+    document.body.className = "";
+    document.body.classList.add(`theme-${value}`);
+  });
+});
+
+
+
 
 // Main click
 el.clickButton.addEventListener("click", () => {
