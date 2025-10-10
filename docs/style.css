@@ -36,6 +36,7 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
+  margin-bottom: auto;
 }
 
 .controls {
@@ -283,6 +284,7 @@ button {
   width: max-content;
   user-select: none;
   font-family: sans-serif;
+  margin-right: 10px;
 }
 
 .custom-select .selected {
@@ -307,7 +309,7 @@ button {
   background: var(--panel, #eee);
   border-radius: 8px;
   margin: 4px 0 0;
-  padding: 0;
+  padding: 10px;
   list-style: none;
   z-index: 10;
 
@@ -323,8 +325,6 @@ button {
   opacity: 1;
 }
 
-
-
 .custom-select .options li {
   padding: 8px;
   display: flex;
@@ -336,6 +336,24 @@ button {
 .custom-select.open .options {
   display: block;
 }
+
+
+
+#keySelect {
+  padding: 8px 12px;
+  color: rgb(255, 255, 255);
+  font-weight: 900;
+  border-radius: 8px;
+  border: none;
+  background: var(--panel, rgba(255,255,255,0.1)); 
+  font-family: inherit;    
+  font-size: 1rem;
+  cursor: pointer;
+  width: max-content;     
+  margin-right: 10px; 
+}
+
+
 
 
 
@@ -367,7 +385,7 @@ button {
   100% { opacity: 0; transform: translateY(-10px); }
 }
 
-/* Style pour le conteneur des interrupteurs */
+/* Style pour les switch*/
 .toggle-switch {
   display: flex;
   align-items: center;
