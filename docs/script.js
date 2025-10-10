@@ -1085,22 +1085,22 @@ function themeAsset(kind) {
   const t = state.theme;
   // you can replace these URLs with your own images (assets/default.png etc.)
   const map = {
-    default: {
+    normal: {
       base: "img/sacha twerk.gif",
       medium: "img/moyen.gif",
       fast: "img/gif2.gif",
     },
-    fire: {
+    feu: {
       base: "img/sacha twerk.gif",
       medium: "https://via.placeholder.com/150/ff6a00/ffffff?text=Chaud",
       fast: "img/gif2.gif",
     },
-    ice: {
+    glace: {
       base: "img/sacha twerk.gif",
       medium: "img/moyen.gif",
       fast: "img/gif2.gif",
     },
-    pixel: {
+    BW: {
       base: "img/sacha twerk.gif",
       medium: "img/moyen.gif",
       fast: "img/gif2.gif",
