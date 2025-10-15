@@ -21,30 +21,32 @@
   - async audio playing / unlock logic (autoplay policies)
 
 */
-// ---------------------------
-// Main state object
-// ---------------------------
-// This object stores all the persistent variables that define the player's
-// current progress, upgrades, and settings. It acts as the single source
-// of truth for the game logic and UI updates.
+/* 
+---------------------------
+Main state object
+---------------------------
+This object stores all the persistent variables that define the player's
+current progress, upgrades, and settings. It acts as the single source
+of truth for the game logic and UI updates.
+*/
 const state = {
   pseudo: "",              // The player's chosen username (string, empty until set)
   score: 0,                // Current score (the main currency of the game)
   totalClicks: 0,          // Total number of clicks performed by the player // (used for stats and achievements)
   autoClickers: 0,         // Number of auto-clickers purchased (passive score generators)
-  autoClickCost: 50,       // Current cost to purchase the next auto-click
+  autoClickCost: 500,       // Current cost to purchase the next auto-click
   multiplier: 1,           // Current multiplier applied to each click // (increases the score gained per click)
-  multiplierCost: 200,     // Current cost to purchase the next multiplier upgrade
+  multiplierCost: 1000,     // Current cost to purchase the next multiplier upgrade
   critChance: 0.02,        // Probability of a critical hit per click (2% by default)
   critPower: 5,            // Critical hit multiplier (x5 score when a crit occurs)
-  critChanceCost: 500,     // Cost to upgrade the critical hit chance
-  critPowerCost: 800,      // Cost to upgrade the critical hit power
+  critChanceCost: 2000,     // Cost to upgrade the critical hit chance
+  critPowerCost: 3000,      // Cost to upgrade the critical hit power
   tempBoostActive: false,  // Whether a temporary boost is currently active (true/false)
   tempBoostEnd: 0,         // Timestamp (ms) when the temporary boost will end
-  tempBoostCost: 100,      // Cost to activate a temporary boost
+  tempBoostCost: 300,      // Cost to activate a temporary boost
   prestigeCount: 0,        // Number of times the player has prestiged (soft reset)
   prestigeBonus: 0,        // Permanent percentage bonus gained from prestige // (applies to all future clicks)
-  prestigeCost: 5000,      // Initial cost required to perform the first prestige
+  prestigeCost: 20000,      // Initial cost required to perform the first prestige
   lastClickTime: 0,        // Timestamp of the last click (used for CPS tracking // and click speed effects)
   bestTimed: 0,            // Highest score achieved in timed mode (personal best)
   timedActive: false,      // Whether the timed mode is currently active
@@ -63,15 +65,17 @@ const state = {
   achievementsUnlocked: {},// Object storing unlocked achievements // (keys = achievement IDs, values = true/false)
 };
 
-// ---------------------------
-// DOM Selectors
-// ---------------------------
-// This object caches references to all important HTML elements used in the game.
-// Instead of calling document.getElementById() repeatedly, we store them here
-// for easy and efficient access throughout the script.
-// The `el` object is a central registry of all DOM elements used in the game.
-// Instead of repeatedly calling `document.getElementById(...)` throughout the code,
-// we store references here for easier access and cleaner code.
+/* 
+ ---------------------------
+ DOM Selectors
+ ---------------------------
+ This object caches references to all important HTML elements used in the game.
+ Instead of calling document.getElementById() repeatedly, we store them here
+ for easy and efficient access throughout the script.
+ The `el` object is a central registry of all DOM elements used in the game.
+ Instead of repeatedly calling `document.getElementById(...)` throughout the code,
+ we store references here for easier access and cleaner code.
+*/
 const el = {
   // --- Intro & Player Setup ---
   startBtn: document.getElementById("startBtn"),          // Button to start the game from the intro screen
@@ -109,6 +113,7 @@ const el = {
   bonusPopup: document.getElementById("bonusPopup"),      // Popup window showing bonus rewards/info
 
   // --- Audio & Settings ---
+  keySelect: document.getElementById("keySelect"),                // 
   volumeSlider: document.getElementById('volumeSlider'),          // Global volume control slider
   soundTypeSelect: document.getElementById('soundTypeSelect'),    // Dropdown to select sound type (effects/music/etc.)
   soundVolumeSlider: document.getElementById('soundVolumeSlider'),// Slider for adjusting sound effect volume
@@ -143,13 +148,15 @@ const el = {
   music: document.getElementById("music"),                // Background music element
 };
 
-// --- Toast Helper ---
-// showToast() displays a temporary, non-blocking notification message.
-// If a #toastContainer element exists in the DOM, it creates a styled <div> inside it.
-// Otherwise, it falls back to using the native alert() function.
-// Options:
-//   - text: the message to display
-//   - opts.timeout: how long (ms) before the toast fades out (default: 3000ms)
+/*
+ --- Toast Helper ---
+ showToast() displays a temporary, non-blocking notification message.
+ If a #toastContainer element exists in the DOM, it creates a styled <div> inside it.
+ Otherwise, it falls back to using the native alert() function.
+ Options:
+    - text: the message to display
+    - opts.timeout: how long (ms) before the toast fades out (default: 3000ms)
+*/
 function showToast(text, opts={timeout:3000}){
   try {
     // Try to find the toast container in the DOM
@@ -188,16 +195,21 @@ function showToast(text, opts={timeout:3000}){
   }
 }
 
-// --- CPS Indicator ---
-// Cache reference to the CPS (Clicks Per Second) indicator element.
-// May not exist at page load; will be null until created dynamically.
-let __cpsEl = document.querySelector('.cps-indicator') || null;
-
 // --- Inactivity Timer ---
 // Tracks when the player stops clicking.
 // If no click occurs for INACTIVITY_MS (1 second), the main image resets to its base state.
 let __inactivityTimer = null;
 const INACTIVITY_MS = 1000;
+
+// --- Active key state ---
+// Default key binding (matches dropdown default)
+let activeKey = "Space";
+
+
+// --- CPS Indicator ---
+// Cache reference to the CPS (Clicks Per Second) indicator element.
+// May not exist at page load; will be null until created dynamically.
+let __cpsEl = document.querySelector('.cps-indicator') || null;
 
 // --- CPS State ---
 // Array of timestamps (in ms) for recent clicks.
@@ -230,6 +242,19 @@ const volumes = {
   SAFE TO EDIT: change defaults above (volumes, SKINS, state costs) to tune the game.
   EXAMPLE: set state.multiplierCost = 2000 to increase initial mult cost.
 */
+
+// --- Gamepad Connection Events ---
+// Purpose: Detect when a controller (PS4, Switch, Xbox, etc.) is connected or disconnected.
+// Notes:
+// - Browsers fire "gamepadconnected" and "gamepaddisconnected" events.
+// - We log the connection and can show a toast to notify the player.
+window.addEventListener("gamepadconnected", (e) => {
+  showToast("🎮 Manette connectée: " + e.gamepad.id);
+});
+window.addEventListener("gamepaddisconnected", (e) => {
+  showToast("❌ Manette déconnectée: " + e.gamepad.id);
+});
+
 
 // --- Audio helpers ---
 // Purpose: Ensure audio elements are initialized with sensible defaults
@@ -712,10 +737,108 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// --- Gamepad Navigation + Click + Bonus (with deadzone, cooldown, and one-time bonus) ---
+// Purpose:
+// - Navigate between buttons using the left joystick (up/down).
+// - Trigger clicks with the A button (index 0).
+// - Claim bonus with the X button (index 2), but only once per appearance.
+// - Keyboard fallback: Arrow keys for navigation, Enter for click, B for bonus.
+// Fixes:
+// - Deadzone: ignores small stick movements so it doesn’t jitter.
+// - Cooldown: prevents scrolling too fast when holding the stick.
+// - Debounce: ensures one click per button press, not spammed every frame.
+// - One-time bonus: prevents claiming the same bonus multiple times.
+// --- Configurable constants ---
+const DEADZONE = 0.3;      // minimum stick tilt before it counts as movement
+const NAV_DELAY = 200;     // delay (ms) between navigation moves
+let lastNavTime = 0;       // timestamp of last navigation move
+let prevA = false;         // track previous state of button A
+let prevX = false;         // track previous state of bonus button
+let bonusClaimed = false;  // track if current bonus has been claimed
+
+// --- List of navigable elements (buttons in the game) ---
+const navigable = [
+  el.clickButton,
+  el.upgradeAuto,
+  el.upgradeMult,
+  el.upgradeCritChance,
+  el.upgradeCritPower,
+  el.upgradeTempBoost,
+  el.doPrestige
+];
+let navIndex = 0; // index of the currently selected button
+
+// --- Function to visually highlight the focused button ---
+function updateFocus() {
+  navigable.forEach((btn, i) => {
+    if (!btn) return;
+    btn.style.outline = (i === navIndex) ? "3px solid yellow" : "none";
+  });
+}
+updateFocus();
+
+// --- Reset bonusClaimed when bonus appears ---
+// Call this in your bonus spawn logic whenever you show the bonus button
+function showBonus() {
+  bonusClaimed = false;
+  el.bonusButton.style.display = "inline-block";
+}
+
+// --- Keyboard support for Bonus (press "B") ---
+document.addEventListener("keydown", (e) => {
+  if (e.code === "KeyB") {
+    if (!bonusClaimed && el.bonusButton && el.bonusButton.style.display !== "none") {
+      el.bonusButton.click();
+      bonusClaimed = true; // prevent multiple claims
+    }
+  }
+});
+
+// --- Gamepad polling loop ---
+function pollGamepadNav() {
+  const gp = navigator.getGamepads()[0]; // first connected gamepad
+  if (gp) {
+    const now = Date.now();
+
+    // --- Joystick vertical navigation ---
+    const y = gp.axes[1]; // vertical axis (-1 up, +1 down)
+
+    if (y > DEADZONE && now - lastNavTime > NAV_DELAY) {
+      navIndex = (navIndex + 1) % navigable.length;
+      updateFocus();
+      lastNavTime = now;
+    }
+    if (y < -DEADZONE && now - lastNavTime > NAV_DELAY) {
+      navIndex = (navIndex - 1 + navigable.length) % navigable.length;
+      updateFocus();
+      lastNavTime = now;
+    }
+
+    // --- Button A click (debounced) ---
+    const isAPressed = gp.buttons[0].pressed;
+    if (isAPressed && !prevA) {
+      navigable[navIndex].click();
+    }
+    prevA = isAPressed;
+
+    // --- Button X (index 2) → claim bonus (debounced + one-time) ---
+    const isXPressed = gp.buttons[2].pressed;
+    if (isXPressed && !prevX) {
+      if (!bonusClaimed && el.bonusButton && el.bonusButton.style.display !== "none") {
+        el.bonusButton.click();
+        bonusClaimed = true; // prevent multiple claims
+      }
+    }
+    prevX = isXPressed;
+  }
+
+  // Keep polling every frame
+  requestAnimationFrame(pollGamepadNav);
+}
+requestAnimationFrame(pollGamepadNav);
 
 // --- Export / Import Save (client-side JSON) ---
 // Allows the player to export their game state to a JSON file and re-import it later.
-
 // --- Export Save ---
 el.exportBtn.addEventListener('click', () => {
   try {
@@ -1489,9 +1612,9 @@ function themeAsset(kind) {
       fast: "img/feu_fast.png",
     },
     glace: {
-      base: "img/glace_base.png",
-      medium: "img/glace_medium.png",
-      fast: "img/glace_fast.png",
+      base: "img/glace.png",
+      medium: "img/glace.png",
+      fast: "img/glace.png",
     },
     BW: {
       base: "img/bw_base.png",
