@@ -180,7 +180,7 @@ button {
   transition: filter 0.2s;
 }
 .upgrade-btn:hover { filter: brightness(1.1); }
-.upgrade-btn.prestige { background: #ffd45f; }
+.upgrade-btn.prestige { background: var(--accent); }
 
 #modes {
   display: grid;
@@ -273,11 +273,10 @@ button {
 .confetti { position: absolute; pointer-events:none; }
 
 /* Thèmes */
-.theme-normal { --bg1: #707070; --bg2: #a877e375; --accent: #ffcc00; }
-.theme-feu { --bg1: #ff512f; --bg2: #dd2476; --accent: #ffd54f; }
-.theme-glace  { --bg1: #00c6ff; --bg2: #0072ff; --accent: #b2ebf2; }
-.theme-BW { --bg1: #272727; --bg2: #d4d4d4; --accent: #f1c40f; }
-
+.theme-normal { --bg1: #707070; --bg2: #a877e375; --accent: #ff00ea; }
+.theme-feu { --bg1: #ff512f; --bg2: #dd2476; --accent: linear-gradient(234deg,rgba(255, 217, 0, 1) 0%, rgba(255, 149, 0, 1) 23%, rgba(191, 0, 0, 1) 68%, rgba(255, 0, 0, 1) 87%); }
+.theme-glace  { --bg1: #00c6ff; --bg2: #0072ff; --accent: linear-gradient(234deg,rgba(62, 152, 156, 1) 0%, rgba(69, 161, 150, 1) 17%, rgba(0, 255, 229, 1) 54%, rgb(255, 255, 255)); }
+.theme-BW { --bg1: #272727; --bg2: #d4d4d4; --bg3: #ffffff; --accent: linear-gradient(234deg,rgb(255, 255, 255) 24%, rgb(176, 176, 176) 40%, rgba(0, 0, 0, 1) 69%);}
 
 .custom-select {
   position: relative;
@@ -337,8 +336,6 @@ button {
   display: block;
 }
 
-
-
 #keySelect {
   padding: 8px 12px;
   color: rgb(255, 255, 255);
@@ -353,16 +350,12 @@ button {
   margin-right: 10px; 
 }
 
-
-
-
-
-
 @media (max-width: 900px) {
   #gameArea {
     grid-template-columns: 1fr;
   }
 }
+
 .bonus-popup {
   position: fixed;
   top: 20px;
@@ -435,22 +428,6 @@ input:checked + .slider:before {
   font-size: 1rem; /* scales better */
 }
 
-/* Tablet */
-@media (max-width: 1024px) {
-  body {
-    font-size: 16px;
-    margin: 20px;
-  }
-}
-
-/* Phone */
-@media (max-width: 600px) {
-  body {
-    font-size: 14px;
-    margin: 10px;
-  }
-}
-
 .wrapper {
   display: flex;
   flex-wrap: wrap;
@@ -490,5 +467,10 @@ img, video {
 @media (max-width: 1024px) {
   #touchControls {
     display: block;
+  }
+}
+@media screen and (min-width: 80rem) {
+  .container {
+    margin: 1em 2em;
   }
 }
