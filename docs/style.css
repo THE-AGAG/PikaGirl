@@ -429,3 +429,39 @@ input:checked + .slider {
 input:checked + .slider:before {
   transform: translateX(26px);
 }
+
+.container {
+  width: 90%;   /* instead of 1200px */
+  font-size: 1rem; /* scales better */
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  body {
+    font-size: 16px;
+    margin: 20px;
+  }
+}
+
+/* Phone */
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+    margin: 10px;
+  }
+}
+
+.wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.card {
+  flex: 1 1 300px; /* grows/shrinks, min width 300px */
+  margin: 10px;
+}
+
+img, video {
+  max-width: 100%;
+  height: auto;
+}
