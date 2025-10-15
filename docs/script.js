@@ -837,6 +837,30 @@ function pollGamepadNav() {
 }
 requestAnimationFrame(pollGamepadNav);
 
+// --- Touch Controls Support ---
+// Purpose: Provide on-screen buttons for phones/tablets
+// so players can still navigate and trigger actions.
+document.getElementById("btnUp").addEventListener("click", () => {
+  navIndex = (navIndex - 1 + navigable.length) % navigable.length;
+  updateFocus();
+});
+
+document.getElementById("btnDown").addEventListener("click", () => {
+  navIndex = (navIndex + 1) % navigable.length;
+  updateFocus();
+});
+
+document.getElementById("btnA").addEventListener("click", () => {
+  navigable[navIndex].click();
+});
+
+document.getElementById("btnBonus").addEventListener("click", () => {
+  if (!bonusClaimed && el.bonusButton && el.bonusButton.style.display !== "none") {
+    el.bonusButton.click();
+    bonusClaimed = true;
+  }
+});
+
 // --- Export / Import Save (client-side JSON) ---
 // Allows the player to export their game state to a JSON file and re-import it later.
 // --- Export Save ---

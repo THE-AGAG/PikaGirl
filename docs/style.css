@@ -465,3 +465,30 @@ img, video {
   max-width: 100%;
   height: auto;
 }
+
+/* Hide touch controls by default */
+#touchControls {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 9999;
+}
+
+/* Style the buttons */
+#touchControls button {
+  font-size: 24px;
+  margin: 5px;
+  padding: 15px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #333;
+  color: white;
+}
+
+/* Show controls only on tablets/phones */
+@media (max-width: 1024px) {
+  #touchControls {
+    display: block;
+  }
+}
