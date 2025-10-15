@@ -57,7 +57,7 @@ const state = {
     expiresAt: 0,          // Expiration timestamp of the current daily challenge
     claimedToday: false    // Whether the daily reward has already been claimed today
   },
-  theme: "default",        // Current visual theme applied to the game
+  theme: "normal",        // Current visual theme applied to the game
   soundOn: true,           // Whether sound effects are enabled (true/false)
   musicOn: false,          // Whether background music is enabled (true/false)
   achievementsUnlocked: {},// Object storing unlocked achievements // (keys = achievement IDs, values = true/false)
@@ -1472,31 +1472,38 @@ const PERSIST_THROTTLE_MS = 1000;
 // Returns the correct image asset depending on the current theme and click speed.
 // Keys: 'base', 'medium', 'fast' must be preserved.
 function themeAsset(kind) {
-  const t = state.theme;
   const map = {
+    default: {
+      base: "img/sacha twerk.gif",
+      medium: "img/moyen.gif",
+      fast: "img/gif2.gif",
+    },
     normal: {
       base: "img/sacha twerk.gif",
       medium: "img/moyen.gif",
       fast: "img/gif2.gif",
     },
     feu: {
-      base: "img/sacha twerk.gif",
-      medium: "https://via.placeholder.com/150/ff6a00/ffffff?text=Chaud",
-      fast: "img/gif2.gif",
+      base: "img/feu_base.png",
+      medium: "img/feu_medium.png",
+      fast: "img/feu_fast.png",
     },
     glace: {
-      base: "img/sacha twerk.gif",
-      medium: "img/moyen.gif",
-      fast: "img/gif2.gif",
+      base: "img/glace_base.png",
+      medium: "img/glace_medium.png",
+      fast: "img/glace_fast.png",
     },
     BW: {
-      base: "img/sacha twerk.gif",
-      medium: "img/moyen.gif",
-      fast: "img/gif2.gif",
+      base: "img/bw_base.png",
+      medium: "img/bw_medium.png",
+      fast: "img/bw_fast.png",
     }
   };
-  return map[t][kind] || map.default.base;
+  // fallback if theme or kind doesn’t exist
+  const theme = map[state.theme] || map.default;
+  return theme[kind] || theme.base;
 }
+
 /*
   SAFE TO EDIT: themeAsset map
   - You can change the 'base', 'medium', 'fast' paths per theme to use different images.
@@ -1699,7 +1706,7 @@ function loadPersisted() {
     }
 
     // Restore theme (fallback to "default" if missing)
-    setTheme(state.theme || "default");
+    setTheme(state.theme || "normal");
 
     // Ensure prestigeCost is present (migration for older saves)
     if (!state.prestigeCost) state.prestigeCost = 20000;
