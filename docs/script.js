@@ -32,13 +32,13 @@ const state = {
   score: 0,                // Current score (the main currency of the game)
   totalClicks: 0,          // Total number of clicks performed by the player // (used for stats and achievements)
   autoClickers: 0,         // Number of auto-clickers purchased (passive score generators)
-  autoClickCost: 500,       // Current cost to purchase the next auto-click
+  autoClickCost: 150,       // Current cost to purchase the next auto-click
   multiplier: 1,           // Current multiplier applied to each click // (increases the score gained per click)
-  multiplierCost: 1000,     // Current cost to purchase the next multiplier upgrade
+  multiplierCost: 500,     // Current cost to purchase the next multiplier upgrade
   critChance: 0.02,        // Probability of a critical hit per click (2% by default)
   critPower: 5,            // Critical hit multiplier (x5 score when a crit occurs)
-  critChanceCost: 2000,     // Cost to upgrade the critical hit chance
-  critPowerCost: 3000,      // Cost to upgrade the critical hit power
+  critChanceCost: 1000,     // Cost to upgrade the critical hit chance
+  critPowerCost: 1500,      // Cost to upgrade the critical hit power
   tempBoostActive: false,  // Whether a temporary boost is currently active (true/false)
   tempBoostEnd: 0,         // Timestamp (ms) when the temporary boost will end
   tempBoostCost: 300,      // Cost to activate a temporary boost
@@ -860,31 +860,7 @@ function pollGamepadNav() {
   requestAnimationFrame(pollGamepadNav);
 }
 requestAnimationFrame(pollGamepadNav);
-/*
- --- Touch Controls Support ---
- Purpose: Provide on-screen buttons for phones/tablets
- so players can still navigate and trigger actions.
-*/
-document.getElementById("btnUp").addEventListener("click", () => {
-  navIndex = (navIndex - 1 + navigable.length) % navigable.length;
-  updateFocus();
-});
 
-document.getElementById("btnDown").addEventListener("click", () => {
-  navIndex = (navIndex + 1) % navigable.length;
-  updateFocus();
-});
-
-document.getElementById("btnA").addEventListener("click", () => {
-  navigable[navIndex].click();
-});
-
-document.getElementById("btnBonus").addEventListener("click", () => {
-  if (!bonusClaimed && el.bonusButton && el.bonusButton.style.display !== "none") {
-    el.bonusButton.click();
-    bonusClaimed = true;
-  }
-});
 /*
  --- Export / Import Save (client-side JSON) ---
  Allows the player to export their game state to a JSON file and re-import it later.

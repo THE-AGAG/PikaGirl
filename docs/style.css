@@ -464,11 +464,6 @@ img, video {
 }
 
 /* Show controls only on tablets/phones */
-@media (max-width: 1024px) {
-  #touchControls {
-    display: block;
-  }
-}
 @media screen and (min-width: 80rem) {
   .container {
     margin: 1em 2em;
