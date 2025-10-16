@@ -20,8 +20,6 @@
   - persistence keys and shape stored in `localStorage` (persist()/loadPersisted())
   - async audio playing / unlock logic (autoplay policies)
 
-*/
-/* 
 ---------------------------
 Main state object
 ---------------------------
@@ -194,44 +192,53 @@ function showToast(text, opts={timeout:3000}){
     try { alert(text); } catch(e){}
   }
 }
-
-// --- Inactivity Timer ---
-// Tracks when the player stops clicking.
-// If no click occurs for INACTIVITY_MS (1 second), the main image resets to its base state.
+/*
+ --- Inactivity Timer ---
+ Tracks when the player stops clicking.
+ If no click occurs for INACTIVITY_MS (1 second), the main image resets to its base state.
+*/
 let __inactivityTimer = null;
 const INACTIVITY_MS = 1000;
 
-// --- Active key state ---
-// Default key binding (matches dropdown default)
+/*
+ --- Active key state ---
+ Default key binding (matches dropdown default)
+*/
 let activeKey = "Space";
 
-
-// --- CPS Indicator ---
-// Cache reference to the CPS (Clicks Per Second) indicator element.
-// May not exist at page load; will be null until created dynamically.
+/*
+ --- CPS Indicator ---
+ Cache reference to the CPS (Clicks Per Second) indicator element.
+ May not exist at page load; will be null until created dynamically.
+*/
 let __cpsEl = document.querySelector('.cps-indicator') || null;
-
-// --- CPS State ---
-// Array of timestamps (in ms) for recent clicks.
-// Used to calculate the player's current CPS (clicks per second).
+/*
+ --- CPS State ---
+ Array of timestamps (in ms) for recent clicks.
+ Used to calculate the player's current CPS (clicks per second).
+*/
 let __clickTimes = [];
 
-// --- Skins / Shop Catalog ---
-// Defines available skins for the clickable object.
-// Each skin has:
-//   - id: unique identifier
-//   - name: display name (French here: "Par défaut", "Rapide", "Pixel")
-//   - cost: price in in-game currency
-//   - src: image file path for the skin
+/*
+ --- Skins / Shop Catalog ---
+ Defines available skins for the clickable object.
+ Each skin has:
+   - id: unique identifier
+   - name: display name (French here: "Par défaut", "Rapide", "Pixel")
+   - cost: price in in-game currency
+   - src: image file path for the skin
+*/
 const SKINS = [
   { id: 'default', name: 'Par défaut', cost: 0, src: 'img/sacha twerk.gif' },
   { id: 'gif2', name: 'Rapide', cost: 5000, src: 'img/gif2.gif' },
   { id: 'pixel', name: 'Pixel', cost: 15000, src: 'img/moyen.gif' },
 ];
 
-// --- Sound Volumes ---
-// Default per-sound volume levels (range: 0.0 to 1.0).
-// These can be applied to <audio> elements for fine-grained control.
+/*
+ --- Sound Volumes ---
+ Default per-sound volume levels (range: 0.0 to 1.0).
+ These can be applied to <audio> elements for fine-grained control.
+*/
 const volumes = {
   music: 0.5,        // Background music volume
   click: 0.85,       // Normal click sound volume
@@ -243,11 +250,13 @@ const volumes = {
   EXAMPLE: set state.multiplierCost = 2000 to increase initial mult cost.
 */
 
-// --- Gamepad Connection Events ---
-// Purpose: Detect when a controller (PS4, Switch, Xbox, etc.) is connected or disconnected.
-// Notes:
-// - Browsers fire "gamepadconnected" and "gamepaddisconnected" events.
-// - We log the connection and can show a toast to notify the player.
+/*
+ --- Gamepad Connection Events ---
+ Purpose: Detect when a controller (PS4, Switch, Xbox, etc.) is connected or disconnected.
+ Notes:
+  - Browsers fire "gamepadconnected" and "gamepaddisconnected" events.
+  - We log the connection and can show a toast to notify the player.
+*/
 window.addEventListener("gamepadconnected", (e) => {
   showToast("🎮 Manette connectée: " + e.gamepad.id);
 });
@@ -255,11 +264,12 @@ window.addEventListener("gamepaddisconnected", (e) => {
   showToast("❌ Manette déconnectée: " + e.gamepad.id);
 });
 
-
-// --- Audio helpers ---
-// Purpose: Ensure audio elements are initialized with sensible defaults
-// and "unlocked" on the first user interaction (required by many browsers
-// due to autoplay restrictions).
+/*
+ --- Audio helpers ---
+ Purpose: Ensure audio elements are initialized with sensible defaults
+ and "unlocked" on the first user interaction (required by many browsers
+ due to autoplay restrictions).
+*/
 function unlockAudio() {
   // Collect all audio elements used in the game
   const audios = [el.clickSound, el.critSound, el.achievementSound, el.music];
@@ -290,10 +300,11 @@ function unlockAudio() {
     }
   });
 }
-
-// --- Music Autoplay on First Gesture ---
-// Attach listeners for the first user interaction (click or key press).
-// Once triggered, try to start background music if enabled.
+/*
+ --- Music Autoplay on First Gesture ---
+ Attach listeners for the first user interaction (click or key press).
+ Once triggered, try to start background music if enabled.
+*/
 document.addEventListener("click", tryPlayMusic, { once: true });
 document.addEventListener("keydown", tryPlayMusic, { once: true });
 
@@ -314,11 +325,12 @@ function tryPlayMusic() {
 // --- Volume Initialization ---
 const volumeSlider = el.volumeSlider; // Global volume slider element
 const music = el.music;               // Background music element
-
-// Apply initial music volume:
-// 1. Use saved value from `volumes.music` if available
-// 2. Otherwise, use slider value if present
-// 3. Fallback to 0.5 (50%)
+/*
+ Apply initial music volume:
+ 1. Use saved value from `volumes.music` if available
+ 2. Otherwise, use slider value if present
+ 3. Fallback to 0.5 (50%)
+*/
 try {
   if (music) {
     music.volume = (volumes.music !== undefined)
@@ -330,10 +342,11 @@ try {
 } catch (e) {
   // Ignore if music element missing
 }
-
-// --- Volume Slider Sync & Persistence ---
-// Listen for changes on the global volume slider.
-// Update the music element, persist the value, and keep other UI in sync.
+/*
+ --- Volume Slider Sync & Persistence ---
+ Listen for changes on the global volume slider.
+ Update the music element, persist the value, and keep other UI in sync.
+*/
 if (volumeSlider) {
   volumeSlider.addEventListener("input", () => {
     try {
@@ -365,26 +378,30 @@ if (volumeSlider) {
     }
   });
 }
-
-// --- Initialize volume controls ---
-// This function sets up all audio-related UI elements (sliders, toggles, selectors)
-// so that they work both before and after the game starts. It ensures that
-// persisted settings are loaded, applied to audio elements, and kept in sync
-// with the UI controls.
+/*
+ --- Initialize volume controls ---
+ This function sets up all audio-related UI elements (sliders, toggles, selectors)
+ so that they work both before and after the game starts. It ensures that
+ persisted settings are loaded, applied to audio elements, and kept in sync
+ with the UI controls.
+*/
 function initVolumeControls() {
   try {
-    // --- Load persisted settings ---
-    // Attempt to load saved state (volumes, sound type, toggles).
-    // If it fails, ignore silently.
-    try { loadPersisted(); } catch(e) {}
+    /* 
+      --- Load persisted settings ---
+      Attempt to load saved state (volumes, sound type, toggles).
+      If it fails, ignore silently.
+    */
+     try { loadPersisted(); } catch(e) {}
 
     // --- DOM references ---
     const globalVol = document.getElementById('volumeSlider'); // Global music volume slider
     const typeSel = el.soundTypeSelect;                        // Dropdown to choose sound type (music, click, crit, achievement)
     const volSlider = el.soundVolumeSlider;                    // Slider to adjust volume for the selected type
-
-    // --- Ensure state.soundVolumes exists ---
-    // If not present, initialize it with defaults from `volumes`.
+    /*
+     --- Ensure state.soundVolumes exists ---
+     If not present, initialize it with defaults from `volumes`.
+    */    
     if (!state.soundVolumes) state.soundVolumes = { ...volumes };
     // Merge persisted values into the in-memory `volumes` object
     Object.assign(volumes, state.soundVolumes || {});
@@ -513,15 +530,19 @@ function initVolumeControls() {
     // Fail silently if initialization fails
   }
 }
-
-// --- Initialize volume UI on load ---
-// Ensures that controls are ready even before the game "Start" button is pressed.
+/*
+ --- Initialize volume UI on load ---
+ Ensures that controls are ready even before the game "Start" button is pressed.
+*/
 try { initVolumeControls(); } catch (e) {}
-
-// --- Volume UI Toggle ---
-// Switches between the global volume slider (pre-game) and the in-game per-type controls.
-// - When not in-game: show the global slider, hide the per-type controls.
-// - When in-game: hide the global slider, show the per-type controls.
+/*
+ --- Volume UI Toggle ---
+ Switches between the global volume slider (pre-game) and the in-game per-type controls.
+ - When not in-game: 
+    show the global slider, hide the per-type controls.
+ - When in-game: 
+    hide the global slider, show the per-type controls.
+*/
 function setVolumeUIForGame(inGame) {
   try {
     const globalVol = document.getElementById('volumeSlider');
@@ -561,9 +582,10 @@ el.startBtn.addEventListener("click", () => {
 
   // Show backup button
   try { el.backupBtn.style.display = 'inline-block'; } catch (e) {}
-
-  // --- CPS Indicator ---
-  // Add a CPS (Clicks Per Second) indicator if it doesn’t exist yet
+  /*
+   --- CPS Indicator ---
+   Add a CPS (Clicks Per Second) indicator if it doesn’t exist yet
+  */
   if (!document.querySelector('.cps-indicator')) {
     const c = document.createElement('div');
     c.className = 'cps-indicator';
@@ -706,13 +728,14 @@ el.startBtn.addEventListener("click", () => {
   scheduleBonusButton(); // prepare bonus button events
   ensureDaily();         // initialize daily challenge
 });
-
-// --- Keyboard Support ---
-// Allow players to trigger a click using the Space or Enter keys.
-// This only works when the focus is NOT inside an input or textarea.
-// To prevent abuse or accidental rapid-fire, we:
-//   - Ignore key repeats (when the key is held down).
-//   - Enforce a minimum delay between key-triggered clicks.
+/*
+ --- Keyboard Support ---
+ Allow players to trigger a click using the Space or Enter keys.
+ This only works when the focus is NOT inside an input or textarea.
+ To prevent abuse or accidental rapid-fire, we:
+   - Ignore key repeats (when the key is held down).
+   - Enforce a minimum delay between key-triggered clicks.
+*/
 let __lastKeyClick = 0;                // Timestamp of the last key-triggered click
 const __KEY_MIN_DELAY = 80;            // Minimum delay (ms) between key-triggered clicks
 
@@ -736,19 +759,20 @@ document.addEventListener('keydown', (e) => {
     try { el.clickButton.click(); } catch (err) {}
   }
 });
-
-// --- Gamepad Navigation + Click + Bonus (with deadzone, cooldown, and one-time bonus) ---
-// Purpose:
-// - Navigate between buttons using the left joystick (up/down).
-// - Trigger clicks with the A button (index 0).
-// - Claim bonus with the X button (index 2), but only once per appearance.
-// - Keyboard fallback: Arrow keys for navigation, Enter for click, B for bonus.
-// Fixes:
-// - Deadzone: ignores small stick movements so it doesn’t jitter.
-// - Cooldown: prevents scrolling too fast when holding the stick.
-// - Debounce: ensures one click per button press, not spammed every frame.
-// - One-time bonus: prevents claiming the same bonus multiple times.
-// --- Configurable constants ---
+/*
+ --- Gamepad Navigation + Click + Bonus (with deadzone, cooldown, and one-time bonus) ---
+ Purpose:
+ - Navigate between buttons using the left joystick (up/down).
+ - Trigger clicks with the A button (index 0).
+ - Claim bonus with the X button (index 2), but only once per appearance.
+ - Keyboard fallback: Arrow keys for navigation, Enter for click, B for bonus.
+ Fixes:
+ - Deadzone: ignores small stick movements so it doesn’t jitter.
+ - Cooldown: prevents scrolling too fast when holding the stick.
+ - Debounce: ensures one click per button press, not spammed every frame.
+ - One-time bonus: prevents claiming the same bonus multiple times.
+ --- Configurable constants ---
+*/
 const DEADZONE = 0.3;      // minimum stick tilt before it counts as movement
 const NAV_DELAY = 200;     // delay (ms) between navigation moves
 let lastNavTime = 0;       // timestamp of last navigation move
@@ -836,10 +860,11 @@ function pollGamepadNav() {
   requestAnimationFrame(pollGamepadNav);
 }
 requestAnimationFrame(pollGamepadNav);
-
-// --- Touch Controls Support ---
-// Purpose: Provide on-screen buttons for phones/tablets
-// so players can still navigate and trigger actions.
+/*
+ --- Touch Controls Support ---
+ Purpose: Provide on-screen buttons for phones/tablets
+ so players can still navigate and trigger actions.
+*/
 document.getElementById("btnUp").addEventListener("click", () => {
   navIndex = (navIndex - 1 + navigable.length) % navigable.length;
   updateFocus();
@@ -860,10 +885,11 @@ document.getElementById("btnBonus").addEventListener("click", () => {
     bonusClaimed = true;
   }
 });
-
-// --- Export / Import Save (client-side JSON) ---
-// Allows the player to export their game state to a JSON file and re-import it later.
-// --- Export Save ---
+/*
+ --- Export / Import Save (client-side JSON) ---
+ Allows the player to export their game state to a JSON file and re-import it later.
+ --- Export Save ---
+*/
 el.exportBtn.addEventListener('click', () => {
   try {
     // Clone the current game state
@@ -952,10 +978,11 @@ el.importFile.addEventListener('change', (ev) => {
   // Read the file as text
   reader.readAsText(f);
 });
-
-// --- Reset scoreboard ---
-// Clears all saved progress, scores, daily challenge, and settings.
-// Before wiping, creates a backup in localStorage with a timestamped key.
+/*
+ --- Reset scoreboard ---
+ Clears all saved progress, scores, daily challenge, and settings.
+ Before wiping, creates a backup in localStorage with a timestamped key.
+*/
 el.resetScoresBtn.addEventListener('click', () => {
   if (!confirm('Reset total? This will erase ALL saved progress, scores, daily challenge and settings. A backup will be created. Continue?')) return;
   try {
@@ -1038,9 +1065,10 @@ options.forEach(opt => {
     document.body.classList.add(`theme-${value}`);
   });
 });
-
-// --- Main Click Handler ---
-// Core gameplay: handles scoring, critical hits, image feedback, sounds, and achievements.
+/*
+ --- Main Click Handler ---
+ Core gameplay: handles scoring, critical hits, image feedback, sounds, and achievements.
+*/
 el.clickButton.addEventListener("click", () => {
   const now = Date.now();
   const diff = now - state.lastClickTime;
@@ -1058,12 +1086,13 @@ el.clickButton.addEventListener("click", () => {
 
   // Record click timestamp for CPS tracking
   try { __clickTimes.push(Date.now()); } catch (e) {}
-
-  // --- Visual feedback based on click speed ---
-  // Thresholds (ms between clicks):
-  //   fast: <=100ms (10+ cps)
-  //   medium: 101–167ms (~6–10 cps)
-  //   base: >167ms (1–6 cps)
+  /*
+   --- Visual feedback based on click speed ---
+   Thresholds (ms between clicks):
+     fast: <=100ms (10+ cps)
+     medium: 101–167ms (~6–10 cps)
+     base: >167ms (1–6 cps)
+  */
   if (diff <= 100) {
     el.gameImage.src = themeAsset("fast");
     el.gameImage.style.transform = "scale(1.2)";
@@ -1129,18 +1158,20 @@ el.clickButton.addEventListener("click", () => {
   scheduleUpdateUI();                             // refresh UI
   checkClickAchievements();                       // check for click-related achievements
 });
-
-// --- Make the main image clickable too ---
-// Clicking the image triggers the same logic as clicking the main button.
+/*
+ --- Make the main image clickable too ---
+ Clicking the image triggers the same logic as clicking the main button.
+*/
 try {
   el.gameImage.style.cursor = 'pointer';
   el.gameImage.addEventListener('click', () => {
     try { el.clickButton.click(); } catch (e) {}
   });
 } catch (e) {}
-
-// --- Purchases ---
-// Upgrade: Auto-clicker
+/*
+ --- Purchases ---
+ Upgrade: Auto-clicker
+*/
 el.upgradeAuto.addEventListener("click", () => {
   if (state.score >= state.autoClickCost) {
     state.score -= state.autoClickCost;
@@ -1163,14 +1194,15 @@ el.upgradeMult.addEventListener("click", () => {
     throttlePersist();
   } else showToast("Pas assez de points !");
 });
-
-// --- Upgrade: Critical Chance ---
-// Increases the player's chance of landing a critical hit.
-// Each purchase:
-//   - Costs current critChanceCost
-//   - Increases crit chance by +1% (0.01), capped at 50%
-//   - Doubles the cost for the next upgrade
-//   - Unlocks an achievement when upgraded
+/*
+ --- Upgrade: Critical Chance ---
+ Increases the player's chance of landing a critical hit.
+ Each purchase:
+   - Costs current critChanceCost
+   - Increases crit chance by +1% (0.01), capped at 50%
+   - Doubles the cost for the next upgrade
+   - Unlocks an achievement when upgraded
+*/
 el.upgradeCritChance.addEventListener("click", () => {
   if (state.score >= state.critChanceCost) {
     state.score -= state.critChanceCost;
@@ -1184,13 +1216,14 @@ el.upgradeCritChance.addEventListener("click", () => {
   }
 });
 
-
-// --- Upgrade: Critical Power ---
-// Increases the damage multiplier applied when a critical hit occurs.
-// Each purchase:
-//   - Costs current critPowerCost
-//   - Increases crit power by +5, capped at x50
-//   - Doubles the cost for the next upgrade
+/*
+ --- Upgrade: Critical Power ---
+ Increases the damage multiplier applied when a critical hit occurs.
+ Each purchase:
+   - Costs current critPowerCost
+   - Increases crit power by +5, capped at x50
+   - Doubles the cost for the next upgrade
+*/
 el.upgradeCritPower.addEventListener("click", () => {
   if (state.score >= state.critPowerCost) {
     state.score -= state.critPowerCost;
@@ -1201,13 +1234,14 @@ el.upgradeCritPower.addEventListener("click", () => {
   } else showToast("Pas assez de points !");
 });
 
-
-// --- Upgrade: Temporary Boost ---
-// Grants a temporary 30-second boost that doubles click gains.
-// Each purchase:
-//   - Costs current tempBoostCost
-//   - Activates boost immediately
-//   - Sets an expiration timestamp (30s from now)
+/*
+ --- Upgrade: Temporary Boost ---
+ Grants a temporary 30-second boost that doubles click gains.
+ Each purchase:
+   - Costs current tempBoostCost
+   - Activates boost immediately
+   - Sets an expiration timestamp (30s from now)
+*/
 el.upgradeTempBoost.addEventListener("click", () => {
   if (state.score >= state.tempBoostCost) {
     state.score -= state.tempBoostCost;
@@ -1218,18 +1252,19 @@ el.upgradeTempBoost.addEventListener("click", () => {
   } else showToast("Pas assez de points !");
 });
 
-
-// --- Prestige System ---
-// Prestige allows the player to reset progress in exchange for permanent bonuses.
-// Requirements:
-//   - Must have at least prestigeCost points
-// Effects:
-//   - Deducts prestigeCost
-//   - Increases prestigeCount by 1
-//   - Grants +10% permanent prestige bonus
-//   - Resets most progress (soft reset)
-//   - Doubles prestigeCost for the next prestige
-//   - Unlocks an achievement and shows confetti effect
+/*
+ --- Prestige System ---
+ Prestige allows the player to reset progress in exchange for permanent bonuses.
+ Requirements:
+   - Must have at least prestigeCost points
+ Effects:
+   - Deducts prestigeCost
+   - Increases prestigeCount by 1
+   - Grants +10% permanent prestige bonus
+   - Resets most progress (soft reset)
+   - Doubles prestigeCost for the next prestige
+   - Unlocks an achievement and shows confetti effect
+*/
 el.doPrestige.addEventListener("click", () => {
   // Verify cost
   if (state.score < (state.prestigeCost || 20000)) {
@@ -1267,10 +1302,11 @@ el.doPrestige.addEventListener("click", () => {
   try { showConfetti(); } catch (e) {}
 });
 
-
-// --- Confetti Effect ---
-// Simple celebratory animation triggered on prestige.
-// Creates a temporary canvas overlay with falling colored rectangles.
+/*
+ --- Confetti Effect ---
+ Simple celebratory animation triggered on prestige.
+ Creates a temporary canvas overlay with falling colored rectangles.
+*/
 function showConfetti() {
   const container = document.getElementById('clickZone');
   if (!container) return;
@@ -1321,13 +1357,14 @@ function showConfetti() {
   }
   requestAnimationFrame(step);
 }
-
-// --- Timed Mode ---
-// A 60-second challenge where the player tries to score as many points as possible.
-// - Starts only if not already active
-// - Tracks remaining time and score
-// - Updates UI every second
-// - At the end, saves best score and unlocks an achievement
+/*
+ --- Timed Mode ---
+ A 60-second challenge where the player tries to score as many points as possible.
+ - Starts only if not already active
+ - Tracks remaining time and score
+ - Updates UI every second
+ - At the end, saves best score and unlocks an achievement
+*/
 el.startTimedBtn.addEventListener("click", () => {
   if (state.timedActive) return; // prevent multiple starts
   state.timedActive = true;
@@ -1349,10 +1386,11 @@ el.startTimedBtn.addEventListener("click", () => {
   }, 1000);
 });
 
-
-// --- Backup Button ---
-// Creates a timestamped backup of the current game state in localStorage.
-// Useful before resets or major changes.
+/*
+ --- Backup Button ---
+ Creates a timestamped backup of the current game state in localStorage.
+ Useful before resets or major changes.
+*/
 if (el.backupBtn) {
   el.backupBtn.addEventListener('click', () => {
     try {
@@ -1365,12 +1403,13 @@ if (el.backupBtn) {
   });
 }
 
-
-// --- Daily Challenge ---
-// A once-per-day 10-minute challenge.
-// - Can only be started once per day
-// - Prevents restart if already active or completed
-// - Marks challenge as started in localStorage
+/*
+ --- Daily Challenge ---
+ A once-per-day 10-minute challenge.
+ - Can only be started once per day
+ - Prevents restart if already active or completed
+ - Marks challenge as started in localStorage
+*/
 el.startDailyBtn.addEventListener("click", () => {
   const todayKey = new Date().toDateString();
   ensureDaily(false); // initialize daily state if missing
@@ -1407,21 +1446,23 @@ el.startDailyBtn.addEventListener("click", () => {
   throttlePersist();
 });
 
-
-// --- Manual Save ---
-// Allows the player to save progress instantly.
+/*
+ --- Manual Save ---
+ Allows the player to save progress instantly.
+*/
 el.saveNowBtn.addEventListener("click", () => {
   saveScore();
   unlockAchievement("💾 Score sauvegardé manuellement.");
 });
 
-
-// --- Auto-Click Loop ---
-// Runs every second.
-// - Adds points based on number of auto-clickers and multiplier
-// - Applies temporary boost and prestige bonus
-// - Updates timed score if in timed mode
-// - Ends temporary boost when expired
+/*
+ --- Auto-Click Loop ---
+ Runs every second.
+ - Adds points based on number of auto-clickers and multiplier
+ - Applies temporary boost and prestige bonus
+ - Updates timed score if in timed mode
+ - Ends temporary boost when expired
+*/
 setInterval(() => {
   if (state.autoClickers > 0) {
     let gain = state.autoClickers * state.multiplier;
@@ -1441,12 +1482,13 @@ setInterval(() => {
   }
 }, 1000);
 
-
-// --- Random Bonus Popup ---
-// Periodically spawns a bonus button at a random position.
-// - Appears for 5 seconds
-// - Grants a random bonus (100–1000 points) when clicked
-// - Updates score and UI
+/*
+ --- Random Bonus Popup ---
+ Periodically spawns a bonus button at a random position.
+ - Appears for 5 seconds
+ - Grants a random bonus (100–1000 points) when clicked
+ - Updates score and UI
+*/
 function scheduleBonusButton() {
   setTimeout(() => {
     if (!el.bonusButton) return; // guard if button missing
@@ -1474,16 +1516,16 @@ if (el.bonusButton) {
     updateUI();
   });
 }
-
-// --- Achievements System ---
-
-// Unlock a new achievement and display it in the UI.
-// - Prevents duplicates (checks if already unlocked).
-// - Adds the achievement to the list in the sidebar.
-// - Shows a temporary toast notification.
-// - Plays a sound effect if sound is enabled.
-// - Persists the updated state.
-function unlockAchievement(text) {
+/*
+ --- Achievements System ---
+ Unlock a new achievement and display it in the UI.
+ - Prevents duplicates (checks if already unlocked).
+ - Adds the achievement to the list in the sidebar.
+ - Shows a temporary toast notification.
+ - Plays a sound effect if sound is enabled.
+ - Persists the updated state.
+*/
+ function unlockAchievement(text) {
   // Skip if already unlocked
   if (state.achievementsUnlocked[text]) return;
   state.achievementsUnlocked[text] = true;
@@ -1512,10 +1554,11 @@ function unlockAchievement(text) {
   throttlePersist();
 }
 
-
-// --- Click Achievements ---
-// Milestones based on total clicks.
-// Unlocks achievements at specific thresholds (100 → 10M).
+/*
+ --- Click Achievements ---
+ Milestones based on total clicks.
+ Unlocks achievements at specific thresholds (100 → 10M).
+*/
 const clickMilestones = [100, 1000, 10000, 100000, 1000000, 10000000];
 
 function checkClickAchievements() {
@@ -1529,9 +1572,10 @@ function checkClickAchievements() {
   if (state.timedActive) state.timedScore += state.multiplier;
 }
 
-
-// --- Upgrade Achievements ---
-// Unlocks achievements when reaching multiples of 10 in upgrades.
+/*
+ --- Upgrade Achievements ---
+ Unlocks achievements when reaching multiples of 10 in upgrades.
+*/
 function checkUpgradeAchievements() {
   if (state.autoClickers > 0 && state.autoClickers % 10 === 0) {
     unlockAchievement(`⚙️ ${state.pseudo} a atteint ${state.autoClickers} Auto-Clickers !`);
@@ -1541,11 +1585,11 @@ function checkUpgradeAchievements() {
   }
 }
 
-
-// --- UI Update System ---
-
-// Updates all dynamic UI elements (score, stats, buttons).
-// Uses a "previous values" cache to avoid unnecessary DOM updates.
+/*
+ --- UI Update System ---
+ Updates all dynamic UI elements (score, stats, buttons).
+ Uses a "previous values" cache to avoid unnecessary DOM updates.
+*/
 function updateUI() {
   if (!updateUI._prev) updateUI._prev = {};
   const prev = updateUI._prev;
@@ -1593,11 +1637,12 @@ function updateUI() {
   if (el.soundToggle) el.soundToggle.checked = state.soundOn;
   if (el.themeSelect) el.themeSelect.value = state.theme;
 }
-
-// --- UI Update Scheduler ---
-// Prevents redundant updates by batching them into a single
-// requestAnimationFrame cycle. This ensures that if multiple
-// state changes happen quickly, the UI only re-renders once per frame.
+/*
+ --- UI Update Scheduler ---
+ Prevents redundant updates by batching them into a single
+ requestAnimationFrame cycle. This ensures that if multiple
+ state changes happen quickly, the UI only re-renders once per frame.
+*/
 let __uiScheduled = false;
 function scheduleUpdateUI() {
   if (__uiScheduled) return; // already scheduled
@@ -1607,17 +1652,19 @@ function scheduleUpdateUI() {
     __uiScheduled = false;
   });
 }
-
-// --- Persistence Throttle ---
-// Avoids writing to localStorage too often (expensive operation).
-// Ensures saves happen at most once per second, with a queued backup if needed.
+/*
+ --- Persistence Throttle ---
+ Avoids writing to localStorage too often (expensive operation).
+ Ensures saves happen at most once per second, with a queued backup if needed.
+*/
 let __lastPersist = 0;
 let __pendingPersist = false;
 const PERSIST_THROTTLE_MS = 1000;
-
-// --- Theme Assets ---
-// Returns the correct image asset depending on the current theme and click speed.
-// Keys: 'base', 'medium', 'fast' must be preserved.
+/*
+ --- Theme Assets ---
+ Returns the correct image asset depending on the current theme and click speed.
+ Keys: 'base', 'medium', 'fast' must be preserved.
+*/
 function themeAsset(kind) {
   const map = {
     default: {
@@ -1654,19 +1701,20 @@ function themeAsset(kind) {
 /*
   SAFE TO EDIT: themeAsset map
   - You can change the 'base', 'medium', 'fast' paths per theme to use different images.
-  - Keep the same keys ('base','medium','fast') because code references themeAsset('fast'|'medium'|'base').
-*/
+  - Keep the same keys ('base','medium','fast') because code references themeAsset('fast'|'medium'|'base')
 
-// --- Utility: Number Formatting ---
-// Adds spaces as thousands separators for readability.
+ --- Utility: Number Formatting ---
+ Adds spaces as thousands separators for readability.
+*/
 function formatNumber(n) {
   if (typeof n !== 'number') n = Number(n) || 0;
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
-
-// --- CPS Computation ---
-// Calculates clicks per second (CPS) by counting clicks in the last 1s.
-// Updates the CPS indicator element and unlocks an achievement if threshold reached.
+/*
+ --- CPS Computation ---
+ Calculates clicks per second (CPS) by counting clicks in the last 1s.
+ Updates the CPS indicator element and unlocks an achievement if threshold reached.
+*/
 function computeAndDisplayCPS() {
   const now = Date.now();
   __clickTimes = __clickTimes.filter(t => now - t <= 1000); // keep last 1s
@@ -1679,9 +1727,10 @@ function computeAndDisplayCPS() {
   if (cps >= 12) unlockAchievement('⚡ Frenzy: 12 CPS atteint !');
 }
 setInterval(computeAndDisplayCPS, 500); // update twice per second
-
-// --- Particle Effects ---
-// Visual feedback when clicking: spawns particles around the click zone.
+/*
+ --- Particle Effects ---
+ Visual feedback when clicking: spawns particles around the click zone.
+*/
 let ctx = null;
 let particles = [];
 if (el.particlesCanvas) {
@@ -1732,9 +1781,10 @@ function renderParticles() {
   requestAnimationFrame(renderParticles);
 }
 if (ctx) renderParticles();
-
-// --- Scoreboard ---
-// Saves current score to localStorage and updates leaderboard.
+/*
+ --- Scoreboard ---
+ Saves current score to localStorage and updates leaderboard.
+*/
 function saveScore() {
   let scores = JSON.parse(localStorage.getItem("scores")) || [];
   const name = (state.pseudo && state.pseudo.trim()) ? state.pseudo.trim()
@@ -1776,11 +1826,11 @@ function clearAllScores() {
   localStorage.removeItem('scores');
   displayScores();
 }
-
-// --- Persistence ---
-// Saves and restores game state to/from localStorage.
-
-// Save current state
+/*
+ --- Persistence ---
+ Saves and restores game state to/from localStorage.
+ Save current state
+*/
 function persist() {
   localStorage.setItem("clickerState", JSON.stringify({
     pseudo: state.pseudo,
@@ -1857,9 +1907,10 @@ function loadPersisted() {
 
     // Ensure prestigeCost is present (migration for older saves)
     if (!state.prestigeCost) state.prestigeCost = 20000;
-
-    // --- Restore Volumes ---
-    // If old-style `volumes` map exists in save, merge into current volumes
+    /*
+     --- Restore Volumes ---
+     If old-style `volumes` map exists in save, merge into current volumes
+    */
     if (s.volumes) {
       Object.assign(volumes, s.volumes);
       try { if (el.music) el.music.volume = volumes.music; } catch (e) {}
@@ -1905,18 +1956,20 @@ function loadPersisted() {
     // Ignore errors during load
   }
 }
-
-// --- Initial Audio Unlock ---
-// Some browsers block audio until the first user gesture.
-// Calling unlockAudio() early increases the chance that sounds
-// will be ready if the user interacts quickly after load.
+/*
+ --- Initial Audio Unlock ---
+ Some browsers block audio until the first user gesture.
+ Calling unlockAudio() early increases the chance that sounds
+ will be ready if the user interacts quickly after load.
+*/
 unlockAudio();
 
-
-// --- Audio Monitoring ---
-// Utility to help debug audio loading issues.
-// - Logs errors if an audio file is missing or corrupt.
-// - Reports the readyState of each audio element (0–4).
+/*
+ --- Audio Monitoring ---
+ Utility to help debug audio loading issues.
+ - Logs errors if an audio file is missing or corrupt.
+ - Reports the readyState of each audio element (0–4).
+*/
 function monitorAudio(elAudio, name) {
   if (!elAudio) return;
   elAudio.addEventListener('error', (e) => {
@@ -1931,20 +1984,21 @@ function monitorAudio(elAudio, name) {
 [el.clickSound, el.critSound, el.achievementSound, el.music]
   .forEach((a, i) => monitorAudio(a, ['click','crit','achievement','music'][i]));
 
-
-// --- Scoreboard Initialization ---
-// Populate the scoreboard immediately on load
+/*
+ --- Scoreboard Initialization ---
+ Populate the scoreboard immediately on load
+*/
 displayScores();
+/*
+ Note: Auto-save has been removed. Scores are only saved when the
+ player explicitly clicks the Save button. This prevents the
+ scoreboard from being spammed with mid-game values.
 
-// Note: Auto-save has been removed. Scores are only saved when the
-// player explicitly clicks the Save button. This prevents the
-// scoreboard from being spammed with mid-game values.
-
-
-// --- Daily Challenge Setup ---
-// Ensures a daily challenge exists for the current day.
-// If forceNew=true or the stored key is not today, a new challenge is generated.
-// Otherwise, restores the existing challenge state and updates the UI.
+ --- Daily Challenge Setup ---
+ Ensures a daily challenge exists for the current day.
+ If forceNew=true or the stored key is not today, a new challenge is generated.
+ Otherwise, restores the existing challenge state and updates the UI.
+*/
 function ensureDaily(forceNew=false) {
   const todayKey = new Date().toDateString();
   const storedKey = localStorage.getItem("dailyKey");
@@ -1993,9 +2047,10 @@ function ensureDaily(forceNew=false) {
   }
 }
 
-
-// --- Daily Challenge Tick ---
-// Runs every second to check challenge progress and expiration.
+/*
+ --- Daily Challenge Tick ---
+ Runs every second to check challenge progress and expiration.
+*/
 setInterval(() => {
   if (!state.daily.active) return;
 
