@@ -463,9 +463,70 @@ img, video {
   color: white;
 }
 
-/* Show controls only on tablets/phones */
-@media screen and (min-width: 80rem) {
-  .container {
-    margin: 1em 2em;
+/* ================================
+   Mobile responsiveness (phones)
+   ================================ */
+@media (max-width: 600px) {
+
+  /* Make header stack vertically instead of horizontal */
+  header {
+    flex-direction: column; /* stack items */
+    align-items: flex-start; /* align to left */
+    gap: 10px;
+  }
+
+  /* Reduce font size for better readability on small screens */
+  body {
+    font-size: 16px; /* smaller base font */
+  }
+
+  /* Game area: single column layout */
+  #gameArea {
+    grid-template-columns: 1fr; /* only one column */
+    padding: 8px;
+  }
+
+  /* HUD: stack stats vertically */
+  .hud {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* Shop buttons: make them full width */
+  .shop .upgrade-btn {
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  /* Game image smaller on phones */
+  #gameImage {
+    width: 100px;
+    height: 100px;
+  }
+
+  /* Custom select (themes) smaller */
+  .custom-select img {
+    width: 50px;
+    height: 12px;
+  }
+
+  /* Stats text smaller */
+  #stats {
+    flex-wrap: wrap; /* allow line break */
+    font-size: 0.9rem;
+  }
+
+  /* Buttons in controls (music, sound, etc.) */
+  .controls {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Toast notifications smaller */
+  .toast {
+    font-size: 0.85rem;
+    padding: 8px 12px;
   }
 }
