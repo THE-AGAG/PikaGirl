@@ -13,9 +13,21 @@
 :root {
   --bg1: #707070;
   --bg2: #a877e375;
-  --accent: #ffcc00;
+  --accent: #d4d4d4;
   --text: #ffffff;
   --panel: rgba(255,255,255,0.12);
+}
+
+header h1 {
+  display: flex;
+  flex-direction: column; 
+  line-height: 1; 
+  margin: 0; 
+  font-size: 2rem; 
+}
+
+header h1 span {
+  display: block;
 }
 
 body {
@@ -36,8 +48,10 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  margin-bottom: auto;
+  margin-top: 30px; 
+  margin-bottom: 80px;
 }
+
 
 .controls {
   display: flex;
@@ -61,7 +75,7 @@ select, button, input[type="text"] {
   border: none;
 }
 
-.butt {
+.butt  {
   color: white;
   background-color: rgb(62, 57, 57);
   transition: all 0.3s ease; 
@@ -273,10 +287,31 @@ button {
 .confetti { position: absolute; pointer-events:none; }
 
 /* Thèmes */
-.theme-normal { --bg1: #707070; --bg2: #a877e375; --accent: #ff00ea; }
+.theme-normal { --bg1: #707070; --bg2: #a877e375; --accent: #b1b1b1; }
 .theme-feu { --bg1: #ff512f; --bg2: #dd2476; --accent: linear-gradient(234deg,rgba(255, 217, 0, 1) 0%, rgba(255, 149, 0, 1) 23%, rgba(191, 0, 0, 1) 68%, rgba(255, 0, 0, 1) 87%); }
 .theme-glace  { --bg1: #00c6ff; --bg2: #0072ff; --accent: linear-gradient(234deg,rgba(62, 152, 156, 1) 0%, rgba(69, 161, 150, 1) 17%, rgba(0, 255, 229, 1) 54%, rgb(255, 255, 255)); }
-.theme-BW { --bg1: #272727; --bg2: #d4d4d4; --bg3: #ffffff; --accent: linear-gradient(234deg,rgb(255, 255, 255) 24%, rgb(176, 176, 176) 40%, rgba(0, 0, 0, 1) 69%);}
+.theme-BW {
+  --bg1: #000000;
+  --bg2: #888888;
+  --bg3: #ffffff;
+  --accent: linear-gradient(
+    90deg,
+    #000,
+    #4a4a4a,
+    #a8a8a8,
+    #fff,
+    #a8a8a8,
+    #4a4a4a,
+    #000
+  );
+  background-size: 300% 100%;
+  animation: shine 6s linear infinite;
+}
+
+@keyframes shine {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 0%; }
+}
 
 .custom-select {
   position: relative;
@@ -476,9 +511,10 @@ img, video {
   }
 
   /* Reduce font size for better readability on small screens */
-  body {
-    font-size: 16px; /* smaller base font */
-  }
+ body {
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+}
+
 
   /* Game area: single column layout */
   #gameArea {
@@ -530,3 +566,33 @@ img, video {
     padding: 8px 12px;
   }
 }
+
+#score::before {
+   content: "₽ "; font-weight: 700; color: rgb(204, 173, 0); 
+  }
+
+#saveNowBtn,
+#startDailyBtn,
+#startTimedBtn,
+#exportBtn,
+#importBtn,
+#resetScoresBtn,
+#backupBtn,
+#bonusButton,
+#backBtn {
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+#saveNowBtn:hover,
+#startDailyBtn,
+#startTimedBtn:hover,
+#exportBtn:hover,
+#importBtn:hover,
+#resetScoresBtn:hover,
+#backupBtn:hover,
+#bonusButton:hover,
+#backBtn:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+}
+
