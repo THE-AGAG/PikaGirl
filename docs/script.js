@@ -1676,7 +1676,7 @@ function updateUI() {
 
   // Map of element keys → text values
   const mappings = [
-    ['score', `Score : ${state.score}`],
+    ['score', `${state.score.toLocaleString('fr-FR')}`],
     ['multiplierStat', `x${state.multiplier}${state.tempBoostActive ? " (Boost x2)" : ""}`],
     ['autoClickStat', `Auto: ${state.autoClickers}/s`],
     ['critStat', `Crit: ${(state.critChance*100).toFixed(0)}% (x${state.critPower})`],
@@ -2012,10 +2012,7 @@ function loadPersisted() {
     if (state.musicOn) {
       const p = el.music.play();
       if (p && typeof p.then === 'function') p.catch(() => {/* ignore autoplay block */});
-    }
-
-    // Restore theme (fallback to "default" if missing)
-    setTheme(state.theme || "normal");
+    }   
 
     // Ensure prestigeCost is present (migration for older saves)
     if (!state.prestigeCost) state.prestigeCost = 20000;
