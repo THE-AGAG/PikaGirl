@@ -15,14 +15,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jeu Clicker complet</title>
+  <title>Clicker Pikagirl</title>
   <!-- Ensure relative paths work correctly when served from a subpath (GitHub Pages) -->
   <base href="./">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
-    <h1>🎯 Clicker Ultime</h1>
+    <h1>🎯 Le Clicker du Groupe Pikagirl</h1>
 
 <div class="controls"> <!-- Interrupteur pour la musique --> 
   <label class="toggle-switch"> 
@@ -73,12 +73,23 @@
       </div>
   <div class="save-controls">
     <button id="saveNowBtn" style="display:none;">💾 Save</button>
-    <button id="exportBtn" style="display:none;">⬇ Export</button> <!-- A retirer quand base de donnée sera intégré-->
-    <button id="importBtn" style="display:none;">⬆ Import</button> <!-- A retirer quand base de donnée sera intégré-->
+    <button id="statsBtn" class="upgrade-btn" style="display:none;">📊 Player Stats</button>
+    <!-- Stats Popup -->
+    <div id="statsPopup" class="stats-popup" style="display:none;">
+      <div class="stats-content">
+        <h2>📊 Your Stats</h2>
+        <ul>
+          <li>Total Clicks: <span id="statTotalClicks">0</span></li>
+          <li>Click Rate (CPS): <span id="statCPS">0</span></li>
+          <li>Prestige Count: <span id="statPrestige">0</span></li>
+          <li>Best Timed Score: <span id="statBestTimed">0</span></li>
+        </ul>
+        <button id="closeStats" class="butt">Close</button>
+      </div>
+    </div>
     <input id="importFile" type="file" accept="application/json" style="display:none;" />
-    <button id="resetScoresBtn" style="display:none;">♻ Reset Scores</button> <!-- A retirer quand base de donnée sera intégré-->
-  <button id="backupBtn" style="display:none;">📦 Backup</button> <!-- A retirer quand base de donnée sera intégré-->
   <button id="bonusButton" style="display:none; position: absolute; right: 20px; top: 10px;">🎁</button>
+  <span id="bonusTimer" style="margin-left:8px; font-weight:bold; color:#ffd45f; display:none;"></span>
     <button id="backBtn" style="display:none;">🔙 Back</button>
   </div>
     </div>
@@ -108,11 +119,14 @@
 
     <section class="play">
       <div id="clickZone">
-        <img id="gameImage" src="img/sacha twerk.gif" alt="Image dynamique" />
-        <button class="click-btn" id="clicker">Cliquer !</button>
-        <div id="pressHint" class="press-hint" style="display:none;">Press Space</div>
-        <canvas id="particlesCanvas"></canvas>
+        <div class="cps-indicator">CPS: 0</div>
+          <button id="bonusButton" style="display:none;">🎁</button>
+          <img id="gameImage" src="img/sacha twerk.gif" alt="Image dynamique" />
+          <button class="click-btn" id="clicker">Cliquer !</button>
+          <div id="pressHint" class="press-hint" style="display:none;">Press Space</div>
+          <canvas id="particlesCanvas"></canvas>
       </div>
+
 
       <div class="shop">
         <button class="upgrade-btn" id="buyAutoClick">Acheter Auto-Click (Coût : 500)</button>
@@ -154,17 +168,84 @@
   </main>
 
   <!-- Audio -->
-  <audio id="clickSound" src="song/Item Pickup Pokémon Black #pokemon #soundeffects #shorts.mp3" preload="auto"></audio>
+  <audio id="clickSound" src="song/item-pickup.mp3" preload="auto"></audio>
   <audio id="critSound" src="song/Pokemon (A Button) - Sound Effect (HD).mp3" preload="auto"></audio>
   <audio id="achievementSound" src="song/[Sound Effect] ErasableNinja Low Health (Pokémon low health).mp3" preload="auto"></audio>
   <audio id="music" src="song/Area Zero - Pokémon Scarlet and Violet OST (Gamerip).mp3" preload="auto" loop></audio>
 
   <!-- Scripts -->
-  <script src="script.js"></script>
-  <style>
-    @media screen and (min-width: 80rem) {
+  <script type="module">
+  // Import Firebase core and Firestore functions directly from the CDN
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc } 
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-}
-  </style>
+  // Your Firebase project configuration (unique to your project)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAInDN9LtUDLRO-1-vO5Qt_I9Vymh3VZ28",
+    authDomain: "pikagirl-43e0a.firebaseapp.com",
+    projectId: "pikagirl-43e0a"
+  };
+
+  // Initialize Firebase app and Firestore database
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // --- Save score function ---
+  // If a pseudo already exists, update its score; otherwise, create a new entry
+  async function saveScoreToDB(pseudo, score) {
+    try {
+      const q = query(collection(db, "scores"), where("pseudo", "==", pseudo));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        // Update existing document
+        const docRef = snapshot.docs[0].ref;
+        await updateDoc(docRef, { score, timestamp: Date.now() });
+        showToast("✅ Score updated!");
+      } else {
+        // Create new document
+        await addDoc(collection(db, "scores"), { pseudo, score, timestamp: Date.now() });
+        showToast("✅ New score saved!");
+      }
+
+      // Refresh the scoreboard after saving
+      displayScores();
+
+    } catch (err) {
+      console.error("Error saving to DB:", err);
+      showToast("⚠️ Error while saving online.");
+    }
+  }
+
+  // --- Display scores function ---
+  // Fetch all scores, sort them, keep top 10, and render them in the scoreboard
+  async function displayScores() {
+    try {
+      const snapshot = await getDocs(collection(db, "scores"));
+      let scores = snapshot.docs.map(doc => doc.data());
+
+      scores.sort((a, b) => b.score - a.score); // sort descending
+      scores = scores.slice(0, 10); // keep top 10
+
+      el.scoreList.innerHTML = "";
+      scores.forEach(s => {
+        const li = document.createElement("li");
+        li.textContent = `${s.pseudo}: ${s.score}`;
+        el.scoreList.appendChild(li);
+      });
+    } catch (err) {
+      console.error("Error loading scores:", err);
+    }
+  }
+
+  // Expose functions globally so script.js can call them
+  window.saveScoreToDB = saveScoreToDB;
+  window.displayScores = displayScores;
+  </script>
+
+  <!-- game script  -->
+  <script src="script.js"></script>
+
 </body>
 </html>

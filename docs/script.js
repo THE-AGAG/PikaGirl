@@ -1,5 +1,5 @@
 /*
-  FILE: script.js
+  FILE: script.js 
   GROUP: Game logic / UI wiring / Persistence
 
   High-level groups inside this file:
@@ -57,9 +57,10 @@ const state = {
     expiresAt: 0,          // Expiration timestamp of the current daily challenge
     claimedToday: false    // Whether the daily reward has already been claimed today
   },
-  theme: "normal",        // Current visual theme applied to the game
+  theme: "normal",         // Current visual theme applied to the game
   soundOn: true,           // Whether sound effects are enabled (true/false)
   musicOn: false,          // Whether background music is enabled (true/false)
+  bonusActive: false,      // prevents multiple bonus claim
   achievementsUnlocked: {},// Object storing unlocked achievements // (keys = achievement IDs, values = true/false)
 };
 
@@ -120,12 +121,7 @@ const el = {
   themeSelect: document.getElementById("themeSelect"),            // Dropdown to change the game’s visual theme
 
   // --- Save & Data Management ---
-  backupBtn: document.getElementById('backupBtn'),        // Button to create a backup of the save data
   saveNowBtn: document.getElementById("saveNowBtn"),      // Button to manually save progress
-  exportBtn: document.getElementById("exportBtn"),        // Button to export save data
-  importBtn: document.getElementById("importBtn"),        // Button to import save data
-  importFile: document.getElementById("importFile"),      // File input for importing save data
-  resetScoresBtn: document.getElementById("resetScoresBtn"), // Button to reset leaderboard/high scores
   backBtn: document.getElementById("backBtn"),            // Button to return to a previous menu/screen
 
   // --- Game Modes ---
@@ -144,6 +140,45 @@ const el = {
   critSound: document.getElementById("critSound"),        // Sound effect for critical hits
   achievementSound: document.getElementById("achievementSound"), // Sound effect when unlocking an achievement
   music: document.getElementById("music"),                // Background music element
+};
+
+// --- Stats Elements ---
+const statsBtn = document.getElementById("statsBtn");
+const statsPopup = document.getElementById("statsPopup");
+const closeStats = document.getElementById("closeStats");
+
+// Open stats popup
+statsBtn.addEventListener("click", () => {
+  updateStatsUI();
+  statsPopup.style.display = "flex";
+});
+
+// Close stats popup
+closeStats.addEventListener("click", () => {
+  statsPopup.style.display = "none";
+});
+
+// Update stats values
+function updateStatsUI() {
+  document.getElementById("statTotalClicks").textContent = state.totalClicks;
+  document.getElementById("statCPS").textContent = calculateCPS();
+  document.getElementById("statPrestige").textContent = state.prestigeCount;
+  document.getElementById("statBestTimed").textContent = state.bestTimed;
+}
+
+// Calculate CPS (Clicks Per Second)
+function calculateCPS() {
+  const now = Date.now();
+  // Keep only clicks in the last 1000ms
+  __clickTimes = __clickTimes.filter(t => now - t < 1000);
+  return __clickTimes.length;
+}
+
+// --- Firebase Setup ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAInDN9LtUDLRO-1-vO5Qt_I9Vymh3VZ28",
+    authDomain: "pikagirl-43e0a.firebaseapp.com",
+    projectId: "pikagirl-43e0a"
 };
 
 /*
@@ -245,10 +280,13 @@ const volumes = {
   crit: 0.5,         // Critical hit sound volume
   achievement: 0.25, // Achievement unlock sound volume
 };
-/*
-  SAFE TO EDIT: change defaults above (volumes, SKINS, state costs) to tune the game.
-  EXAMPLE: set state.multiplierCost = 2000 to increase initial mult cost.
-*/
+
+// --- Particle Effect Placeholder ---
+// Prevents errors if spawnParticles is called but not implemented yet
+function spawnParticles(color = "#fff") {
+  // TODO: implement real particle animation later
+  console.log("Particles spawned with color:", color);
+}
 
 /*
  --- Gamepad Connection Events ---
@@ -593,6 +631,46 @@ el.startBtn.addEventListener("click", () => {
     document.getElementById('clickZone').appendChild(c);
   }
 
+  // --- Back Button ---
+  if (el.backBtn) {
+    el.backBtn.addEventListener("click", () => {
+      // Hide game area, show pseudo form
+      el.gameArea.style.display = "none";
+      el.pseudoForm.style.display = "grid";
+
+      // Hide in-game buttons
+      el.saveNowBtn.style.display = "none";
+      el.backBtn.style.display = "none";
+      document.getElementById("statsBtn").style.display = "none";
+
+      // Reset volume UI to pre-game mode
+      setVolumeUIForGame(false);
+
+      showToast("🔙 Returned to main menu");
+    });
+  }
+  // --- Reset Score ---
+  if (document.getElementById("resetScoreBtn")) {
+    document.getElementById("resetScoreBtn").addEventListener("click", () => {
+      if (confirm("Êtes-vous sûr de vouloir réinitialiser votre score ? Cela ne peut pas être annulé.")) {
+        state.score = 0;
+        state.totalClicks = 0;
+        state.autoClickers = 0;
+        state.multiplier = 1;
+        state.critChance = 0.02;
+        state.critPower = 5;
+        state.prestigeCount = 0;
+        state.prestigeBonus = 0;
+
+        // Update UI and save
+        scheduleUpdateUI();
+        throttlePersist();
+
+        showToast("🔄 Réinitialisation du score et de la progression!");
+      }
+    });
+  }
+
   // --- Wire sound type selector + per-type volume slider ---
   try {
     const typeSel = el.soundTypeSelect;
@@ -716,18 +794,22 @@ el.startBtn.addEventListener("click", () => {
   // --- Show in-game buttons ---
   try { el.saveNowBtn.style.display = 'inline-block'; } catch (e) {}
   try { el.backBtn.style.display = 'inline-block'; } catch (e) {}
-  try { el.exportBtn.style.display = 'inline-block'; } catch (e) {}
-  try { el.importBtn.style.display = 'inline-block'; } catch (e) {}
-  try { el.resetScoresBtn.style.display = 'inline-block'; } catch (e) {}
   try { el.pressHint.style.display = 'block'; } catch (e) {}
+  try { document.getElementById("statsBtn").style.display = 'inline-block'; } catch (e) {}
 
   // --- Final startup tasks ---
   loadPersisted();       // reload persisted state
   updateUI();            // refresh UI with current state
-  displayScores();       // show leaderboard
+  // ✅ Use realtime listener if available, otherwise fallback
+  if (typeof listenToScores === "function") {
+    listenToScores();    // Firestore realtime updates
+  } else if (typeof displayScores === "function") {
+    displayScores();     // fallback manual refresh
+  }
   scheduleBonusButton(); // prepare bonus button events
   ensureDaily();         // initialize daily challenge
 });
+
 /*
  --- Keyboard Support ---
  Allow players to trigger a click using the Space or Enter keys.
@@ -861,127 +943,6 @@ function pollGamepadNav() {
 }
 requestAnimationFrame(pollGamepadNav);
 
-/*
- --- Export / Import Save (client-side JSON) ---
- Allows the player to export their game state to a JSON file and re-import it later.
- --- Export Save ---
-*/
-el.exportBtn.addEventListener('click', () => {
-  try {
-    // Clone the current game state
-    const exportState = JSON.parse(JSON.stringify(state));
-
-    // Remove audio-related keys (we don’t want to export user-specific audio prefs)
-    delete exportState.soundVolumes;
-    delete exportState.soundType;
-    delete exportState.musicOn;
-    delete exportState.soundOn;
-
-    // Remove legacy 'volumes' map if present
-    if (exportState.volumes) delete exportState.volumes;
-
-    // Include scoreboard separately (stored in localStorage)
-    const scores = JSON.parse(localStorage.getItem('scores') || '[]');
-
-    // Build export object with timestamp, state, and scores
-    const toExport = {
-      exportedAt: new Date().toISOString(),
-      state: exportState,
-      scores
-    };
-
-    // Convert to JSON string (pretty-printed with 2 spaces)
-    const data = JSON.stringify(toExport, null, 2);
-
-    // Create a downloadable blob
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    // Create a temporary <a> element to trigger download
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `clicker-save-${new Date().toISOString()}.json`;
-    document.body.appendChild(a);
-    a.click();   // Trigger download
-    a.remove();  // Clean up
-    URL.revokeObjectURL(url); // Free memory
-  } catch (e) {
-    showToast('Erreur lors de la création de l\'export');
-  }
-});
-
-// --- Import Save ---
-el.importBtn.addEventListener('click', () => {
-  try { el.importFile.click(); } catch (e) {}
-});
-
-// Handle file selection
-el.importFile.addEventListener('change', (ev) => {
-  const f = ev.target.files && ev.target.files[0];
-  if (!f) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const parsed = JSON.parse(e.target.result);
-
-      // Support new export structure { exportedAt, state, scores }
-      const incomingState = parsed && parsed.state ? parsed.state : parsed;
-
-      // Merge incoming state into current state, skipping audio-related keys
-      const skip = new Set(['soundVolumes','soundType','musicOn','soundOn','volumes']);
-      for (const k of Object.keys(incomingState || {})) {
-        if (skip.has(k)) continue;
-        try { state[k] = incomingState[k]; } catch (e) {}
-      }
-
-      // If the file contains scores, replace local scores
-      if (parsed && Array.isArray(parsed.scores)) {
-        try { localStorage.setItem('scores', JSON.stringify(parsed.scores)); } catch (e) {}
-      }
-
-      // Persist minimal state and refresh UI
-      throttlePersist();
-      loadPersisted();
-      scheduleUpdateUI();
-      displayScores();
-      showToast('Import successful');
-    } catch (err) {
-      showToast('Invalid import file');
-    }
-  };
-
-  // Read the file as text
-  reader.readAsText(f);
-});
-/*
- --- Reset scoreboard ---
- Clears all saved progress, scores, daily challenge, and settings.
- Before wiping, creates a backup in localStorage with a timestamped key.
-*/
-el.resetScoresBtn.addEventListener('click', () => {
-  if (!confirm('Reset total? This will erase ALL saved progress, scores, daily challenge and settings. A backup will be created. Continue?')) return;
-  try {
-    const key = `clicker_backup_before_reset_${new Date().toISOString()}`;
-    localStorage.setItem(key, localStorage.getItem('clickerState') || JSON.stringify(state));
-  } catch (e) {}
-
-  // Remove all known keys used by the game
-  try { localStorage.removeItem('clickerState'); } catch (e) {}
-  try { localStorage.removeItem('scores'); } catch (e) {}
-  try { localStorage.removeItem('dailyKey'); } catch (e) {}
-  try { localStorage.removeItem('az'); } catch (e) {}
-
-  // Reload page to reset in-memory state
-  try { location.reload(); } catch (e) { window.location.href = window.location.href; }
-});
-
-// --- Back button ---
-// Returns to the initial screen by reloading the page.
-el.backBtn.addEventListener("click", () => {
-  try { location.reload(); } catch (e) { window.location.href = window.location.href; }
-});
-
 // --- Sound / Music / Theme Controls ---
 
 // Music toggle: play/pause background music and persist preference
@@ -1048,6 +1009,11 @@ options.forEach(opt => {
 el.clickButton.addEventListener("click", () => {
   const now = Date.now();
   const diff = now - state.lastClickTime;
+  console.log("Clicked! Score before:", state.score);
+  state.score += 1;
+  console.log("Score after:", state.score);
+  scheduleUpdateUI();
+
   state.lastClickTime = now;
 
   // --- Calculate gain ---
@@ -1130,9 +1096,11 @@ el.clickButton.addEventListener("click", () => {
   }
 
   // --- Post-click updates ---
-  spawnParticles(isCrit ? "#ffd700" : "#ffffff"); // gold particles for crits
-  scheduleUpdateUI();                             // refresh UI
-  checkClickAchievements();                       // check for click-related achievements
+  spawnParticles(isCrit ? "#ffd700" : "#ffffff"); // gold particles for crits 
+  window.spawnParticles = spawnParticles;             // Make spawnParticles available globally
+  scheduleUpdateUI();                                 // refresh UI
+  checkClickAchievements();                           // check for click-related achievements
+  scheduleUpdateUI();
 });
 /*
  --- Make the main image clickable too ---
@@ -1159,17 +1127,27 @@ el.upgradeAuto.addEventListener("click", () => {
   } else showToast("Pas assez de points !");
 });
 
-// Upgrade: Multiplier
+// --- Multiplier Upgrade ---
 el.upgradeMult.addEventListener("click", () => {
   if (state.score >= state.multiplierCost) {
     state.score -= state.multiplierCost;
-    state.multiplier += 1;
-    state.multiplierCost = Math.floor(state.multiplierCost * 2); // cost scaling
+
+    if (state.multiplier === 1) {
+      state.multiplier = 5;   // first buy → x5
+    } else {
+      state.multiplier += 5;  // afterwards → +5 each time
+    }
+
+    state.multiplierCost = Math.floor(state.multiplierCost * 2);
+
     checkUpgradeAchievements();
     scheduleUpdateUI();
     throttlePersist();
-  } else showToast("Pas assez de points !");
+  } else {
+    showToast("Tu n'as pas assez de point!");
+  }
 });
+
 /*
  --- Upgrade: Critical Chance ---
  Increases the player's chance of landing a critical hit.
@@ -1367,6 +1345,7 @@ el.startTimedBtn.addEventListener("click", () => {
  Creates a timestamped backup of the current game state in localStorage.
  Useful before resets or major changes.
 */
+/*
 if (el.backupBtn) {
   el.backupBtn.addEventListener('click', () => {
     try {
@@ -1378,7 +1357,7 @@ if (el.backupBtn) {
     }
   });
 }
-
+*/
 /*
  --- Daily Challenge ---
  A once-per-day 10-minute challenge.
@@ -1427,7 +1406,28 @@ el.startDailyBtn.addEventListener("click", () => {
  Allows the player to save progress instantly.
 */
 el.saveNowBtn.addEventListener("click", () => {
-  saveScore();
+  // 1. Save locally (use the implemented local-save helper)
+  try {
+    saveScoreToLocal(state.pseudo, state.score);
+  } catch (e) {
+    console.warn('Local save failed:', e);
+    showToast('⚠️ Erreur lors de la sauvegarde locale.');
+  }
+
+  // 2. Save to cloud if the firebase module has exposed the function
+  try {
+    if (typeof window.saveScoreToDB === 'function') {
+      // call the function exposed by firebase.js (module)
+      window.saveScoreToDB(state.pseudo, state.score).catch?.(() => {});
+    } else {
+      // No cloud save available (module not loaded or not initialized)
+      console.info('Cloud save unavailable: window.saveScoreToDB not found');
+    }
+  } catch (e) {
+    console.error('Cloud save error:', e);
+  }
+
+  // 3. Unlock achievement / feedback
   unlockAchievement("💾 Score sauvegardé manuellement.");
 });
 
@@ -1464,34 +1464,138 @@ setInterval(() => {
  - Appears for 5 seconds
  - Grants a random bonus (100–1000 points) when clicked
  - Updates score and UI
+ - Shows a cooldown timer until next spawn
 */
-function scheduleBonusButton() {
-  setTimeout(() => {
-    if (!el.bonusButton) return; // guard if button missing
-    el.bonusButton.style.display = "block";
-    el.bonusButton.style.right = `${12 + Math.random()*40}px`;
-    el.bonusButton.style.top = `${-8 + Math.random()*40}px`;
 
-    setTimeout(() => {
-      el.bonusButton.style.display = "none";
-      scheduleBonusButton(); // schedule next spawn
-    }, 5000);
-  }, 15000 + Math.random()*15000); // random interval between 15–30s
-}
 
 if (el.bonusButton) {
   el.bonusButton.addEventListener("click", () => {
-    const bonus = Math.floor(100 + Math.random()*900);
+    // Check if already claimed
+    if (state.bonusActive) return;
+
+    state.bonusActive = true; // lock to prevent multiple claims
+
+    const bonus = Math.floor(100 + Math.random() * 900);
     state.score += bonus;
     if (state.timedActive) state.timedScore += bonus;
 
-    el.bonusPopup.textContent = `🎁 Bonus reçu : +${bonus} points !`;
+    el.bonusPopup.textContent = `🎁 Bonus received: +${bonus} points!`;
     el.bonusPopup.style.display = "block";
-    setTimeout(() => el.bonusPopup.style.display = "none", 3000);
+    setTimeout(() => (el.bonusPopup.style.display = "none"), 3000);
+
+    // Hide the button immediately after the click
+    el.bonusButton.style.display = "none";
 
     updateUI();
   });
 }
+
+/*
+ --- Bonus Cooldown Timer ---
+ Displays a countdown timer directly under the CPS indicator
+ until the next bonus button spawns.
+*/
+function startBonusCooldown() {
+  const cpsEl = document.querySelector('.cps-indicator');
+  if (!cpsEl) {
+    // If CPS indicator doesn't exist, just schedule normally
+    scheduleBonusButton();
+    return;
+  }
+
+  // Create or reuse a timer element
+  let timerEl = document.getElementById("bonusTimer");
+  if (!timerEl) {
+    timerEl = document.createElement("div");
+    timerEl.id = "bonusTimer";
+    timerEl.style.position = "absolute";
+    timerEl.style.left = "8px";
+    timerEl.style.top = "28px"; // just below CPS indicator
+    timerEl.style.fontWeight = "800";
+    timerEl.style.color = "#ffd45f";
+    timerEl.style.background = "rgba(0,0,0,0.4)";
+    timerEl.style.padding = "4px 6px";
+    timerEl.style.borderRadius = "6px";
+    cpsEl.parentElement.appendChild(timerEl);
+  }
+
+  // Random cooldown between 15–30 seconds
+  let cooldown = 15 + Math.floor(Math.random() * 15);
+  timerEl.style.display = "block";
+  timerEl.textContent = `⏳ ${cooldown}s`;
+
+  const interval = setInterval(() => {
+    cooldown--;
+    if (cooldown > 0) {
+      timerEl.textContent = `⏳ ${cooldown}s`;
+    } else {
+      clearInterval(interval);
+      timerEl.style.display = "none";
+      scheduleBonusButton(); // spawn the next bonus
+    }
+  }, 1000);
+}
+
+/*
+ --- Bonus Button Scheduler ---
+ Spawns the bonus button directly under the CPS indicator.
+ - Appears for 5 seconds
+ - Can only be claimed once per spawn
+ - After hiding, starts a cooldown before showing again
+*/
+function scheduleBonusButton() {
+  setTimeout(() => {
+    if (!el.bonusButton) return;
+
+    // Reset claim flag
+    state.bonusActive = false;
+
+    // Position the bonus button under the CPS indicator
+    const cpsEl = document.querySelector('.cps-indicator');
+    if (cpsEl) {
+      const rect = cpsEl.getBoundingClientRect();
+      const zoneRect = el.clickZone.getBoundingClientRect();
+
+      el.bonusButton.style.position = "absolute";
+      el.bonusButton.style.left = `${rect.left - zoneRect.left}px`;
+      el.bonusButton.style.top = `${rect.bottom - zoneRect.top + 10}px`;
+    }
+
+    // Show the button
+    el.bonusButton.style.display = "block";
+
+    // Hide after 5s if not clicked
+    setTimeout(() => {
+      el.bonusButton.style.display = "none";
+      startBonusCooldown(); // begin cooldown timer
+    }, 5000);
+
+  }, 15000 + Math.random() * 15000); // random interval between 15–30s
+}
+
+/*
+ --- Bonus Button Click Handler ---
+ Grants a random bonus (100–1000 points) only once per spawn.
+*/
+if (el.bonusButton) {
+  el.bonusButton.addEventListener("click", () => {
+    if (state.bonusActive) return; // already claimed
+
+    state.bonusActive = true; // lock claim
+
+    const bonus = Math.floor(100 + Math.random() * 900);
+    state.score += bonus;
+    if (state.timedActive) state.timedScore += bonus;
+
+    el.bonusPopup.textContent = `🎁 Bonus received: +${bonus} points!`;
+    el.bonusPopup.style.display = "block";
+    setTimeout(() => (el.bonusPopup.style.display = "none"), 3000);
+
+    el.bonusButton.style.display = "none"; // hide immediately
+    updateUI();
+  });
+}
+
 /*
  --- Achievements System ---
  Unlock a new achievement and display it in the UI.
@@ -1703,105 +1807,137 @@ function computeAndDisplayCPS() {
   if (cps >= 12) unlockAchievement('⚡ Frenzy: 12 CPS atteint !');
 }
 setInterval(computeAndDisplayCPS, 500); // update twice per second
+
 /*
- --- Particle Effects ---
- Visual feedback when clicking: spawns particles around the click zone.
+ --- Bonus Button Placement ---
+ Ensures the bonus button always appears directly under the CPS indicator.
 */
-let ctx = null;
-let particles = [];
-if (el.particlesCanvas) {
-  try { ctx = el.particlesCanvas.getContext("2d"); } catch(e) { ctx = null; }
-}
+function showBonusButton() {
+  if (!el.bonusButton) return;
 
-// Resize canvas to match container
-function resizeCanvas() {
-  el.particlesCanvas.width = el.particlesCanvas.clientWidth;
-  el.particlesCanvas.height = el.particlesCanvas.clientHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-setTimeout(resizeCanvas, 0);
+  // Reset claim flag
+  state.bonusActive = false;
 
-// Spawn particles at click position
-function spawnParticles(color="#fff") {
-  const rect = el.clickButton.getBoundingClientRect();
-  const zoneRect = el.particlesCanvas.getBoundingClientRect();
-  const x = rect.left + rect.width/2 - zoneRect.left;
-  const y = rect.top + rect.height/2 - zoneRect.top;
-  for (let i=0;i<12;i++) {
-    particles.push({
-      x, y,
-      vx: (Math.random()-0.5)*3,
-      vy: (Math.random()-0.5)*3 - Math.random()*2,
-      life: 40 + Math.random()*20,
-      color
-    });
+  // Position the bonus button just under the CPS indicator
+  const cpsEl = document.querySelector('.cps-indicator');
+  if (cpsEl) {
+    const rect = cpsEl.getBoundingClientRect();
+    const zoneRect = el.clickZone.getBoundingClientRect();
+
+    // Align left with CPS indicator, place 10px below it
+    el.bonusButton.style.position = "absolute";
+    el.bonusButton.style.left = `${rect.left - zoneRect.left}px`;
+    el.bonusButton.style.top = `${rect.bottom - zoneRect.top + 10}px`;
   }
+
+  el.bonusButton.style.display = "block";
+
+  // Hide after 5s if not clicked
+  setTimeout(() => {
+    el.bonusButton.style.display = "none";
+    startBonusCooldown();
+  }, 5000);
 }
 
-// Render loop for particles
-function renderParticles() {
-  if (!ctx || !el.particlesCanvas) return;
-  ctx.clearRect(0,0,el.particlesCanvas.width, el.particlesCanvas.height);
-  particles.forEach(p => {
-    ctx.globalAlpha = Math.max(0, p.life/60);
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
-    ctx.fill();
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.05; // gravity
-    p.life -= 1;
+/*
+ --- Bonus Button Logic ---
+ Grants a random bonus when clicked, only once per spawn.
+*/
+if (el.bonusButton) {
+  el.bonusButton.addEventListener("click", () => {
+    if (state.bonusActive) return; // prevent multiple claims
+    state.bonusActive = true;
+
+    const bonus = Math.floor(100 + Math.random() * 900);
+    state.score += bonus;
+    if (state.timedActive) state.timedScore += bonus;
+
+    el.bonusPopup.textContent = `🎁 Bonus received: +${bonus} points!`;
+    el.bonusPopup.style.display = "block";
+    setTimeout(() => (el.bonusPopup.style.display = "none"), 3000);
+
+    el.bonusButton.style.display = "none"; // hide immediately
+    updateUI();
   });
-  particles = particles.filter(p => p.life > 0);
-  requestAnimationFrame(renderParticles);
 }
-if (ctx) renderParticles();
+
+/*
+ --- Bonus Cooldown ---
+ Shows a countdown until the next bonus appears.
+*/
+function startBonusCooldown() {
+  const timerEl = document.getElementById("bonusTimer");
+  if (!timerEl) {
+    setTimeout(showBonusButton, 15000 + Math.random() * 15000);
+    return;
+  }
+
+  let cooldown = 15 + Math.floor(Math.random() * 15); // 15–30s
+  timerEl.style.display = "inline";
+  timerEl.textContent = `⏳ ${cooldown}s`;
+
+  const interval = setInterval(() => {
+    cooldown--;
+    if (cooldown > 0) {
+      timerEl.textContent = `⏳ ${cooldown}s`;
+    } else {
+      clearInterval(interval);
+      timerEl.style.display = "none";
+      showBonusButton(); // spawn again
+    }
+  }, 1000);
+}
+
 /*
  --- Scoreboard ---
  Saves current score to localStorage and updates leaderboard.
 */
-function saveScore() {
+// --- Save to localStorage (update if pseudo already exists) ---
+function saveScoreToLocal(pseudo, score) {
   let scores = JSON.parse(localStorage.getItem("scores")) || [];
-  const name = (state.pseudo && state.pseudo.trim()) ? state.pseudo.trim()
-    : (el.pseudoInput && el.pseudoInput.value && el.pseudoInput.value.trim()) ? el.pseudoInput.value.trim()
-    : 'Anonymous';
 
-  scores.push({pseudo: name, score: state.score});
-  scores.sort((a,b) => b.score - a.score);
-  scores = scores.slice(0,10); // keep top 10
+  // Look for an existing entry with the same pseudo
+  const existing = scores.find(s => s.pseudo === pseudo);
+
+  if (existing) {
+    existing.score = score; // update the score
+  } else {
+    scores.push({ pseudo, score }); // add new entry
+  }
+
+  // Save back to localStorage
   localStorage.setItem("scores", JSON.stringify(scores));
-  displayScores();
-}
 
-// Display leaderboard in UI
-function displayScores() {
-  let scores = JSON.parse(localStorage.getItem("scores")) || [];
+  // Refresh the scoreboard
+  displayScores();
+  
+  // Sort by score descending
+  scores.sort((a, b) => b.score - a.score);
+
+  // Keep only the top 10
+  scores = scores.slice(0, 10);
+
+  // Clear and rebuild the list
   el.scoreList.innerHTML = "";
   scores.forEach(s => {
     const li = document.createElement("li");
-    const name = (s && s.pseudo) ? s.pseudo : 'Anonymous';
-
-    const left = document.createElement('span');
-    left.textContent = name;
-    const right = document.createElement('span');
-    right.textContent = formatNumber(Number(s.score) || 0);
-
-    li.appendChild(left);
-    li.appendChild(right);
-
-    // Highlight current player
-    if (state.pseudo && state.pseudo === name) li.style.fontWeight = '800';
-
+    li.textContent = `${s.pseudo}: ${s.score}`;
     el.scoreList.appendChild(li);
   });
 }
+
+// Note: save button handler is centralized earlier to avoid duplicate saves
+
+
+// Legacy Firestore helper removed: use the external module `firebase.js` which
+// exposes `window.saveScoreToDB` and `window.displayScores`.
 
 // Clear all scores
 function clearAllScores() {
   localStorage.removeItem('scores');
   displayScores();
 }
+
 /*
  --- Persistence ---
  Saves and restores game state to/from localStorage.
@@ -1962,9 +2098,30 @@ function monitorAudio(elAudio, name) {
 
 /*
  --- Scoreboard Initialization ---
- Populate the scoreboard immediately on load
+ Populate the scoreboard immediately on load.
+ Use a resilient wrapper that waits for the firebase module to expose
+ `window.displayScores` in case of load/timing ordering differences
+ (e.g. module loading delays or when opening the file via file://).
 */
-displayScores();
+function tryDisplayScores(retries = 6, intervalMs = 500) {
+  if (typeof window.displayScores === 'function') {
+    try {
+      window.displayScores();
+    } catch (e) {
+      console.warn('displayScores() threw:', e);
+    }
+    return;
+  }
+
+  if (retries <= 0) {
+    console.info('displayScores() not available after retries; skipping.');
+    return;
+  }
+
+  setTimeout(() => tryDisplayScores(retries - 1, intervalMs), intervalMs);
+}
+
+tryDisplayScores();
 /*
  Note: Auto-save has been removed. Scores are only saved when the
  player explicitly clicks the Save button. This prevents the

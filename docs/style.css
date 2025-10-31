@@ -371,6 +371,21 @@ button {
   animation: fadeInOut 3s ease forwards;
 }
 
+#bonusButton {
+  position: absolute;
+  top: 40px;   /* just below the CPS indicator (which is at top:8px) */
+  left: 8px;   /* align with the CPS indicator’s left */
+  background: #00d48f;
+  color: #203;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  display: none; /* hidden until spawned */
+  cursor: pointer;
+}
+
+
 @keyframes fadeInOut {
   0% { opacity: 0; transform: translateY(-10px); }
   10% { opacity: 1; transform: translateY(0); }
@@ -443,24 +458,25 @@ img, video {
   height: auto;
 }
 
-/* Hide touch controls by default */
-#touchControls {
-  display: none;
+.stats-popup {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
-  z-index: 9999;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
 }
 
-/* Style the buttons */
-#touchControls button {
-  font-size: 24px;
-  margin: 5px;
-  padding: 15px 20px;
-  border-radius: 10px;
-  border: none;
-  background: #333;
-  color: white;
+.stats-content {
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 12px;
+  color: var(--text);
+  width: 300px;
+  text-align: left;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
 }
 
 /* ================================
