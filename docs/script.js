@@ -758,6 +758,7 @@ el.startBtn.addEventListener("click", () => {
       SKINS.forEach(s => {
         const b = document.createElement('button');
         b.className = 'upgrade-btn';
+        b.classList.add('skin-btn'); 
         b.textContent = `${s.name} (Coût: ${formatNumber(s.cost)})`;
 
         b.addEventListener('click', () => {
@@ -791,6 +792,7 @@ el.startBtn.addEventListener("click", () => {
     }
   } catch (e) {}
 
+  
   // --- Show in-game buttons ---
   try { el.saveNowBtn.style.display = 'inline-block'; } catch (e) {}
   try { el.backBtn.style.display = 'inline-block'; } catch (e) {}
@@ -1686,19 +1688,28 @@ function updateUI() {
   if (!updateUI._prev) updateUI._prev = {};
   const prev = updateUI._prev;
 
-  // Map of element keys → text values
-  const mappings = [
-    ['score', `${state.score.toLocaleString('fr-FR')}`],
-    ['multiplierStat', `x${state.multiplier}${state.tempBoostActive ? " (Boost x2)" : ""}`],
-    ['autoClickStat', `Auto: ${state.autoClickers}/s`],
-    ['critStat', `Crit: ${(state.critChance*100).toFixed(0)}% (x${state.critPower})`],
-    ['prestigeStat', `Prestige: ${state.prestigeCount} (+${state.prestigeBonus}%)`],
-    ['upgradeAuto', `Acheter Auto-Click (Coût : ${formatNumber(state.autoClickCost)})`],
-    ['upgradeMult', `Acheter Multiplicateur (Coût : ${formatNumber(state.multiplierCost)})`],
-    ['upgradeCritChance', `Acheter Crit% (Coût : ${formatNumber(state.critChanceCost)})`],
-    ['upgradeCritPower', `Acheter Crit x (Coût : ${formatNumber(state.critPowerCost)})`],
-    ['upgradeTempBoost', `Boost 30s (Coût : ${formatNumber(state.tempBoostCost)})`],
-  ];
+ const mappings = [
+  ['score', `${state.score.toLocaleString('fr-FR')}`],
+  ['multiplierStat', `x${state.multiplier}${state.tempBoostActive ? " (Boost x2)" : ""}`],
+  ['autoClickStat', `Auto: ${state.autoClickers}/s`],
+  ['critStat', `Crit: ${(state.critChance*100).toFixed(0)}% (x${state.critPower})`],
+  ['prestigeStat', `Prestige: ${state.prestigeCount} (+${state.prestigeBonus}%)`],
+  ['upgradeAuto', ` Auto-Click (Coût : ${formatNumber(state.autoClickCost)})`],
+  ['upgradeMult', ` Multiplicateur (Coût : ${formatNumber(state.multiplierCost)})`],
+  ['upgradeCritChance', ` Crit% (Coût : ${formatNumber(state.critChanceCost)})`],
+  ['upgradeCritPower', ` Crit x (Coût : ${formatNumber(state.critPowerCost)})`],
+  ['upgradeTempBoost', `Boost 30s (Coût : ${formatNumber(state.tempBoostCost)})`],
+];
+
+function formatNumber(num) {
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(2) + "B";
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + "M";
+  if (num >= 1_000) return (num / 1_000).toFixed(2) + "k";
+  return Math.floor(num).toLocaleString('fr-FR');
+}
+
+
+
 
   // Update only if value changed
   for (const [key, val] of mappings) {

@@ -10,26 +10,20 @@
     #clickZone, .cps-indicator) unless you also update `script.js`.
 */
 
+/* =========================
+   VARIABLES GLOBALES
+========================= */
 :root {
   --bg1: #707070;
   --bg2: #a877e375;
   --accent: #d4d4d4;
   --text: #ffffff;
-  --panel: rgba(255,255,255,0.12);
+  --panel: rgba(255, 255, 255, 0.12);
 }
 
-header h1 {
-  display: flex;
-  flex-direction: column; 
-  line-height: 1; 
-  margin: 0; 
-  font-size: 2rem; 
-}
-
-header h1 span {
-  display: block;
-}
-
+/* =========================
+   GLOBAL
+========================= */
 body {
   margin: 0;
   font-size: 20px;
@@ -43,17 +37,52 @@ body {
   gap: 12px;
 }
 
+button {
+  cursor: pointer;
+  border: none;
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 8px;
+}
 
 
+/* Animation / hover pour TOUS les boutons */
+button,
+.upgrade-btn,
+.skin-btn {
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+button:hover,
+.upgrade-btn:hover,
+.skin-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.05);
+}
+
+/* =========================
+   HEADER
+========================= */
 header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  margin-top: 30px; 
+  margin-top: 30px;
   margin-bottom: 80px;
 }
 
+header h1 {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  margin: 0;
+  font-size: 2rem;
+}
+
+header h1 span {
+  display: block;
+}
 
 .controls {
   display: flex;
@@ -61,6 +90,7 @@ header {
   align-items: center;
 }
 
+/* petits blocs switch musique/sons */
 .toggle {
   display: inline-flex;
   gap: 6px;
@@ -70,33 +100,25 @@ header {
   align-items: center;
 }
 
-select, button, input[type="text"] {
+select,
+button,
+input[type="text"] {
   font-size: 1rem;
   padding: 8px 12px;
   border-radius: 8px;
   border: none;
 }
 
-.butt  {
-  color: white;
+/* bouton sombre (close popup, etc.) */
+.butt {
+  color: #fff;
   background-color: rgb(62, 57, 57);
-  transition: all 0.3s ease; 
 }
+.butt:hover { transform: scale(1.1); }
 
-.butt:hover {
-  background-color: rgb(62, 57, 57);
-  transform: scale(1.2);
-}
-
-.butt:active {
-  transform: scale(1.1); 
-}
-
-
-button {
-  cursor: pointer;
-}
-
+/* =========================
+   LAYOUT PRINCIPAL
+========================= */
 #pseudoForm {
   display: grid;
   place-items: center;
@@ -107,10 +129,22 @@ button {
 #gameArea {
   display: grid;
   grid-template-columns: 1fr 320px;
-  grid-template-rows: auto auto 1fr;
   gap: 12px;
   padding: 12px;
+  align-items: start;
 }
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.side-panel #achievements {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
 
 .hud {
   grid-column: 1 / -1;
@@ -134,6 +168,7 @@ button {
   opacity: 0.9;
 }
 
+/* zone de clic */
 .play {
   display: grid;
   grid-template-columns: 1fr;
@@ -150,26 +185,29 @@ button {
   overflow: hidden;
 }
 
-#particlesCanvas {
+/* image principale */
+#gameImage {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  user-select: none;
+  transition: transform 160ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+}
+
+/* CPS badge */
+.cps-indicator {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.4);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-weight: 800;
 }
 
-.click-btn {
-  background-color: #fff;
-  color: #6e8efb;
-  font-size: 1.6rem;
-  padding: 16px 28px;
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-  transition: transform 0.08s ease;
-  margin-top: 8px;
-}
-.click-btn:active { transform: scale(0.96); }
+#particlesCanvas { position: absolute; inset: 0; pointer-events: none; }
 
-/* Hide the visible click button to avoid hold-to-spam exploit; image is clickable instead */
+/* bouton de clic masqué */
 .click-btn { opacity: 0; height: 0; padding: 0; margin: 0; pointer-events: none; }
 
 .press-hint {
@@ -182,36 +220,92 @@ button {
   font-weight: 700;
 }
 
+/* =========================
+   SHOP (3x2)
+========================= */
+#buyAutoClick  { background-image: url("img/Dé_Pipé.png"); }
+#buyMultiplier { background-image: url("img/Poignet_Pouvoir.png"); }
+#buyCritChance { background-image: url("img/Lentilscope.png"); }
+#buyCritPower  { background-image: url("img/Griffe_Rasoir.png"); }
+#buyTempBoost  { background-image: url("img/Charme_Exp.png"); }
+#doPrestige    { background-image: url("img/Charme_chroma.png"); }
+
 .shop {
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(3, 150px);
+  gap: 24px;
+  justify-content: center;
+  align-items: start;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
+/* bouton = image + label */
 .upgrade-btn {
-  padding: 12px;
-  background: var(--accent);
-  color: #333;
-  border-radius: 10px;
-  font-weight: 700;
-  transition: filter 0.2s;
+  width: 150px;
+  height: 160px;
+  border: none;
+  font-weight: 900;
+  border-radius: 12px;
+  background-size: 90px 90px;
+  background-position: top center;
+  background-repeat: no-repeat;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 4px;
 }
-.upgrade-btn:hover { filter: brightness(1.1); }
-.upgrade-btn.prestige { background: var(--accent); }
 
+/* texte sous l'objet */
+.upgrade-label {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  word-break: break-word;
+  padding: 0 4px 2px;
+}
+
+/* =========================
+   SKINS
+========================= */
+.skin-btn {
+  width: auto;
+  font-weight: 900;
+  background: rgba(0,0,0,0.12);
+  color: #fff;
+  font-size: 0.9rem;
+  padding: 10px 19px;
+  text-align: left;
+  background-image: none !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  border-radius: 10px;
+}
+
+/* =========================
+   PANNEAU DROITE (modes, défi)
+========================= */
 #modes {
   display: grid;
   gap: 12px;
 }
 
-.mode-timed, .daily {
+.mode-timed,
+.daily {
   background: var(--panel);
   padding: 12px;
   border-radius: 12px;
 }
 
-#events {
-  position: relative;
-}
+/* =========================
+   TOAST / BONUS / POPUP
+========================= */
+#events { position: relative; }
 
 .bonus {
   position: absolute;
@@ -239,133 +333,107 @@ button {
   z-index: 1000;
 }
 
-#achievements, #scoreboard {
+/* popup stats */
+.stats-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.stats-content {
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 12px;
+  color: var(--text);
+  width: 300px;
+  text-align: left;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+}
+
+/* scoreboard / achievements */
+#achievements,
+#scoreboard {
   background: var(--panel);
   padding: 12px;
   border-radius: 12px;
 }
 
-#achievementList, #scoreList {
+#achievementList,
+#scoreList {
   margin: 0;
   padding-left: 18px;
 }
 
-/* Scoreboard entries: name left, score right */
 #scoreList li {
   display: flex;
   justify-content: space-between;
   padding: 4px 0;
 }
 
-/* Export/import controls layout */
+/* =========================
+   DIVERS
+========================= */
 .save-controls {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-#gameImage {
-  width: 150px;
-  height: 150px;
-  object-fit: contain;
-  user-select: none;
-  transition: transform 160ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
-}
+.confetti { position: absolute; pointer-events: none; }
 
-/* CPS indicator */
-.cps-indicator {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(0,0,0,0.4);
-  padding: 6px 8px;
-  border-radius: 8px;
-  font-weight: 800;
-}
-
-.volume-controls { display:none; }
-
-/* small confetti placeholder */
-.confetti { position: absolute; pointer-events:none; }
-
-/* Animation commune à tous les thèmes */
 @keyframes soft-move {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* Thèmes */
+/* =========================
+   THEMES
+========================= */
+.theme-normal,
+.theme-feu,
+.theme-glace,
+.theme-BW {
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  background-size: 200% 200%;
+  animation: soft-move 10s ease-in-out infinite;
+}
+
 .theme-normal {
   --bg1: #707070;
   --bg2: #a877e375;
   --accent: #b1b1b1;
-  background: linear-gradient(135deg, var(--bg1), var(--bg2));
-  background-size: 200% 200%;
-  animation: soft-move 10s ease-in-out infinite;
 }
 
 .theme-feu {
   --bg1: #ff512f;
   --bg2: #dd2476;
-  --accent: linear-gradient(
-    234deg,
-    rgba(255, 217, 0, 1) 0%,
-    rgba(255, 149, 0, 1) 23%,
-    rgba(191, 0, 0, 1) 68%,
-    rgba(255, 0, 0, 1) 87%
-  );
-  background: linear-gradient(135deg, var(--bg1), var(--bg2));
-  background-size: 200% 200%;
-  animation: soft-move 9s ease-in-out infinite;
+  --accent: linear-gradient(234deg, rgba(255,217,0,1) 0%, rgba(255,149,0,1) 23%, rgba(191,0,0,1) 68%, rgba(255,0,0,1) 87%);
 }
 
 .theme-glace {
   --bg1: #00c6ff;
   --bg2: #0072ff;
-  --accent: linear-gradient(
-    234deg,
-    rgba(62, 152, 156, 1) 0%,
-    rgba(69, 161, 150, 1) 17%,
-    rgba(0, 255, 229, 1) 54%,
-    rgb(255, 255, 255)
-  );
-  background: linear-gradient(135deg, var(--bg1), var(--bg2));
-  background-size: 200% 200%;
-  animation: soft-move 11s ease-in-out infinite;
+  --accent: linear-gradient(234deg, rgba(62,152,156,1) 0%, rgba(69,161,150,1) 17%, rgba(0,255,229,1) 54%, #fff);
 }
 
 .theme-BW {
-  --bg1: #000000;
-  --bg2: #888888;
-  --bg3: #ffffff;
-  --accent: linear-gradient(
-    90deg,
-    #000,
-    #4a4a4a,
-    #a8a8a8,
-    #fff,
-    #a8a8a8,
-    #4a4a4a,
-    #000
-  );
-  background: linear-gradient(135deg, var(--bg1), var(--bg2));
-  background-size: 200% 200%;
-  animation: soft-move 10s ease-in-out infinite;
+  --bg1: #000;
+  --bg2: #888;
+  --accent: linear-gradient(90deg, #000, #4a4a4a, #a8a8a8, #fff, #a8a8a8, #4a4a4a, #000);
 }
 
-
+/* =========================
+   SELECT THEME CUSTOM
+========================= */
 .custom-select {
   position: relative;
   width: max-content;
   user-select: none;
-  font-family: sans-serif;
   margin-right: 10px;
 }
 
@@ -390,12 +458,10 @@ button {
   left: 0;
   background: var(--panel, #eee);
   border-radius: 8px;
-  margin: 4px 0 0;
+  margin-top: 4px;
   padding: 10px;
   list-style: none;
   z-index: 10;
-
-  /* Animation des thèmes */
   max-height: 0;
   overflow: hidden;
   opacity: 0;
@@ -403,7 +469,7 @@ button {
 }
 
 .custom-select.open .options {
-  max-height: 500px; 
+  max-height: 500px;
   opacity: 1;
 }
 
@@ -415,68 +481,60 @@ button {
   cursor: pointer;
 }
 
-.custom-select.open .options {
-  display: block;
-}
-
-#keySelect {
-  padding: 8px 12px;
-  color: rgb(255, 255, 255);
-  font-weight: 900;
-  border-radius: 8px;
-  border: none;
-  background: var(--panel, rgba(255,255,255,0.1)); 
-  font-family: inherit;    
-  font-size: 1rem;
-  cursor: pointer;
-  width: max-content;     
-  margin-right: 10px; 
-}
-
+/* =========================
+   RESPONSIVE
+========================= */
 @media (max-width: 900px) {
   #gameArea {
     grid-template-columns: 1fr;
   }
 }
 
-.bonus-popup {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: #00d48f;
-  color: #203;
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-weight: bold;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-  z-index: 1000;
-  display: none;
-  animation: fadeInOut 3s ease forwards;
+@media (max-width: 600px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  #gameArea {
+    grid-template-columns: 1fr;
+    padding: 8px;
+  }
+
+  .hud { flex-direction: column; gap: 6px; }
+
+  .shop {
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    max-width: none;
+  }
+
+  #gameImage {
+    width: 100px;
+    height: 100px;
+  }
+
+  .custom-select img {
+    width: 50px;
+    height: 12px;
+  }
+
+  #stats {
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+  }
 }
 
-#bonusButton {
-  position: absolute;
-  top: 40px;   /* just below the CPS indicator (which is at top:8px) */
-  left: 8px;   /* align with the CPS indicator’s left */
-  background: #00d48f;
-  color: #203;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-weight: 800;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-  display: none; /* hidden until spawned */
-  cursor: pointer;
+/* =========================
+   SCORE ICON
+========================= */
+#score::before {
+  content: "₽ ";
+  font-weight: 700;
+  color: rgb(204, 173, 0);
 }
 
-
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(-10px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-10px); }
-}
-
-/* Style pour les switch*/
+/* switch ON/OFF (musique, sons) */
 .toggle-switch {
   display: flex;
   align-items: center;
@@ -521,142 +579,31 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-.container {
-  width: 90%;   /* instead of 1200px */
-  font-size: 1rem; /* scales better */
-}
-
-.wrapper {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.card {
-  flex: 1 1 300px; /* grows/shrinks, min width 300px */
-  margin: 10px;
-}
-
-img, video {
-  max-width: 100%;
-  height: auto;
-}
-
-.stats-popup {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.stats-content {
-  background: var(--panel);
-  padding: 20px;
-  border-radius: 12px;
+button {
+  cursor: pointer;
+  font-weight: 900;
+  border: none;
+  border-radius: 8px;
   color: var(--text);
-  width: 300px;
-  text-align: left;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-}
-
-/* ================================
-   Mobile responsiveness (phones)
-   ================================ */
-@media (max-width: 600px) {
-
-  /* Make header stack vertically instead of horizontal */
-  header {
-    flex-direction: column; /* stack items */
-    align-items: flex-start; /* align to left */
-    gap: 10px;
-  }
-
-  /* Reduce font size for better readability on small screens */
- body {
-  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  background: var(--panel);
 }
 
 
-  /* Game area: single column layout */
-  #gameArea {
-    grid-template-columns: 1fr; /* only one column */
-    padding: 8px;
-  }
-
-  /* HUD: stack stats vertically */
-  .hud {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  /* Shop buttons: make them full width */
-  .shop .upgrade-btn {
-    width: 100%;
-    font-size: 0.9rem;
-    padding: 10px;
-  }
-
-  /* Game image smaller on phones */
-  #gameImage {
-    width: 100px;
-    height: 100px;
-  }
-
-  /* Custom select (themes) smaller */
-  .custom-select img {
-    width: 50px;
-    height: 12px;
-  }
-
-  /* Stats text smaller */
-  #stats {
-    flex-wrap: wrap; /* allow line break */
-    font-size: 0.9rem;
-  }
-
-  /* Buttons in controls (music, sound, etc.) */
-  .controls {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  /* Toast notifications smaller */
-  .toast {
-    font-size: 0.85rem;
-    padding: 8px 12px;
-  }
+#bonusButton {
+  background: #00d48f;
+  color: #203;
+  font-weight: 800;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  position: absolute;
+  top: 20px;   
+  left: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: none; /
+  cursor: pointer;
 }
-
-#score::before {
-   content: "₽ "; font-weight: 700; color: rgb(204, 173, 0); 
-  }
-
-#saveNowBtn,
-#startDailyBtn,
-#startTimedBtn,
-#exportBtn,
-#importBtn,
-#resetScoresBtn,
-#backupBtn,
-#bonusButton,
-#backBtn {
-  transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-#saveNowBtn:hover,
-#startDailyBtn,
-#startTimedBtn:hover,
-#exportBtn:hover,
-#importBtn:hover,
-#resetScoresBtn:hover,
-#backupBtn:hover,
-#bonusButton:hover,
-#backBtn:hover {
-  transform: scale(1.15);
-  filter: brightness(1.2);
+#bonusButton:hover {
+  transform: scale(1.1);
+  filter: brightness(1.1);
 }
 
