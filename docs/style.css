@@ -43,6 +43,8 @@ body {
   gap: 12px;
 }
 
+
+
 header {
   display: flex;
   align-items: center;
@@ -286,10 +288,59 @@ button {
 /* small confetti placeholder */
 .confetti { position: absolute; pointer-events:none; }
 
+/* Animation commune à tous les thèmes */
+@keyframes soft-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 /* Thèmes */
-.theme-normal { --bg1: #707070; --bg2: #a877e375; --accent: #b1b1b1; }
-.theme-feu { --bg1: #ff512f; --bg2: #dd2476; --accent: linear-gradient(234deg,rgba(255, 217, 0, 1) 0%, rgba(255, 149, 0, 1) 23%, rgba(191, 0, 0, 1) 68%, rgba(255, 0, 0, 1) 87%); }
-.theme-glace  { --bg1: #00c6ff; --bg2: #0072ff; --accent: linear-gradient(234deg,rgba(62, 152, 156, 1) 0%, rgba(69, 161, 150, 1) 17%, rgba(0, 255, 229, 1) 54%, rgb(255, 255, 255)); }
+.theme-normal {
+  --bg1: #707070;
+  --bg2: #a877e375;
+  --accent: #b1b1b1;
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  background-size: 200% 200%;
+  animation: soft-move 10s ease-in-out infinite;
+}
+
+.theme-feu {
+  --bg1: #ff512f;
+  --bg2: #dd2476;
+  --accent: linear-gradient(
+    234deg,
+    rgba(255, 217, 0, 1) 0%,
+    rgba(255, 149, 0, 1) 23%,
+    rgba(191, 0, 0, 1) 68%,
+    rgba(255, 0, 0, 1) 87%
+  );
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  background-size: 200% 200%;
+  animation: soft-move 9s ease-in-out infinite;
+}
+
+.theme-glace {
+  --bg1: #00c6ff;
+  --bg2: #0072ff;
+  --accent: linear-gradient(
+    234deg,
+    rgba(62, 152, 156, 1) 0%,
+    rgba(69, 161, 150, 1) 17%,
+    rgba(0, 255, 229, 1) 54%,
+    rgb(255, 255, 255)
+  );
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  background-size: 200% 200%;
+  animation: soft-move 11s ease-in-out infinite;
+}
+
 .theme-BW {
   --bg1: #000000;
   --bg2: #888888;
@@ -304,14 +355,11 @@ button {
     #4a4a4a,
     #000
   );
-  background-size: 300% 100%;
-  animation: shine 6s linear infinite;
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  background-size: 200% 200%;
+  animation: soft-move 10s ease-in-out infinite;
 }
 
-@keyframes shine {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 100% 0%; }
-}
 
 .custom-select {
   position: relative;

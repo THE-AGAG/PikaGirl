@@ -950,7 +950,7 @@ el.musicToggle.addEventListener("change", () => {
   state.musicOn = el.musicToggle.checked;
   if (state.musicOn) {
     const p = el.music.play();
-    if (p && typeof p.then === 'function') p.catch(() => { /* ignore autoplay block */ });
+    if (p && typeof p.then === 'function') p.catch(() => { });
   } else {
     try { el.music.pause(); } catch (e) {}
   }
@@ -963,45 +963,57 @@ el.soundToggle.addEventListener("change", () => {
   throttlePersist();
 });
 
+
+const THEME_CLASSES = ["theme-normal", "theme-feu", "theme-glace", "theme-BW"];
+
+function applyTheme(value) {
+  
+  THEME_CLASSES.forEach(c => document.body.classList.remove(c));
+
+  
+  document.body.classList.add(`theme-${value}`);
+
+  
+  const styles = getComputedStyle(document.body);
+  const bg1 = styles.getPropertyValue("--bg1") || "#6e8efb";
+  const bg2 = styles.getPropertyValue("--bg2") || "#a777e3";
+  document.body.style.background = `linear-gradient(135deg, ${bg1}, ${bg2})`;
+  document.body.style.backgroundSize = "200% 200%";
+
+  if (window.state) {
+    state.theme = value;
+  }
+}
+
 // --- Theme Selector (custom dropdown) ---
 const customSelect = document.getElementById("themeSelect");
 const selected = customSelect.querySelector(".selected");
 const options = customSelect.querySelectorAll(".options li");
 
-// Toggle dropdown open/close
 selected.addEventListener("click", () => {
   customSelect.classList.toggle("open");
 });
 
-// Handle theme option selection
 options.forEach(opt => {
   opt.addEventListener("click", () => {
     const img = opt.querySelector("img").src;
     const text = opt.textContent;
-    const value = opt.dataset.value;
+    const value = opt.dataset.value; 
 
-    // Clear current .selected content
     selected.innerHTML = "";
-
-    // Add chosen image
     const newImg = document.createElement("img");
     newImg.src = img;
-    newImg.alt = "";
     selected.appendChild(newImg);
-
-    // Add chosen text
     const span = document.createElement("span");
-    span.textContent = text;
+    span.textContent = text.trim();
     selected.appendChild(span);
 
-    // Close dropdown
     customSelect.classList.remove("open");
 
-    // Apply theme by updating body class
-    document.body.className = "";
-    document.body.classList.add(`theme-${value}`);
+    applyTheme(value);
   });
 });
+
 /*
  --- Main Click Handler ---
  Core gameplay: handles scoring, critical hits, image feedback, sounds, and achievements.
@@ -1708,9 +1720,13 @@ function updateUI() {
   }
 
   // Subtle dynamic background based on score
-  const p = Math.min(1, state.score / 100000);
-  document.body.style.background =
-    `linear-gradient(135deg, rgba(110,142,251,1), rgba(167,119,227,${Math.max(0.4, p)}))`;
+const p = Math.min(1, state.score / 100000);
+const bg1 = getComputedStyle(document.body).getPropertyValue("--bg1") || "#6e8efb";
+const bg2 = getComputedStyle(document.body).getPropertyValue("--bg2") || "#a777e3";
+
+document.body.style.background = `linear-gradient(135deg, ${bg1}, ${bg2})`;
+document.body.style.backgroundSize = "400% 400%";
+
 
   // Sync toggle states with current settings
   if (el.musicToggle) el.musicToggle.checked = state.musicOn;
