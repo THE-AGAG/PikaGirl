@@ -683,3 +683,97 @@ button {
   filter: brightness(1.1);
 }
 
+/* bloc du haut */
+#progressRoute {
+  background: #222;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-top: 15px;
+  width: 100%;
+  max-width: 1200px;   /* adapte ici si tu veux plus large */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* conteneur des paliers : on étale tout */
+#milestones {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* ligne de progression */
+.progress-line {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: #444;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff5555, #ffcc00);
+  transition: width 0.3s ease;
+}
+
+/* chaque palier */
+.milestone {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  filter: grayscale(1);
+  opacity: 0.4;
+  transition: 0.3s;
+  flex: 0 0 auto;
+}
+
+.milestone.reached {
+  filter: none;
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+.milestone-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+/* pour éviter la barre horizontale globale */
+html, body {
+  overflow-x: hidden;
+}
+
+.route-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+  font-weight: 800;
+  color: #ffcc00; /* tu peux changer selon ton thème */
+  text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.route-icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  animation: spinBall 6s linear infinite;
+}
+
+
+
+

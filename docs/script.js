@@ -58,7 +58,7 @@ const state = {
     claimedToday: false    // Whether the daily reward has already been claimed today
   },
   theme: "normal",         // Current visual theme applied to the game
-  soundOn: true,           // Whether sound effects are enabled (true/false)
+  soundOn: false,           // Whether sound effects are enabled (true/false)
   musicOn: false,          // Whether background music is enabled (true/false)
   bonusActive: false,      // prevents multiple bonus claim
   achievementsUnlocked: {},// Object storing unlocked achievements // (keys = achievement IDs, values = true/false)
@@ -77,6 +77,8 @@ const state = {
 */
 const el = {
   // --- Intro & Player Setup ---
+    progressRoute: document.getElementById("progressRoute"),
+  milestonesWrap: document.getElementById("milestones"),
   startBtn: document.getElementById("startBtn"),          // Button to start the game from the intro screen
   pseudoInput: document.getElementById("pseudo"),         // Text input where the player enters their username
   pseudoForm: document.getElementById("pseudoForm"),      // Form wrapper around the username input
@@ -410,7 +412,7 @@ if (volumeSlider) {
       }
 
       // Throttle persistence to avoid excessive saves
-      throttlePersist();
+      persistScoreNow();
     } catch (e) {
       // Ignore errors (e.g., missing elements)
     }
@@ -611,6 +613,8 @@ el.startBtn.addEventListener("click", () => {
   // Hide intro form, show main game area
   el.pseudoForm.style.display = "none";
   el.gameArea.style.display = "grid";
+    startAutoClickLoop(); 
+
 
   // Switch to in-game volume UI
   try { setVolumeUIForGame(true); } catch (e) {}
@@ -637,6 +641,8 @@ el.startBtn.addEventListener("click", () => {
       // Hide game area, show pseudo form
       el.gameArea.style.display = "none";
       el.pseudoForm.style.display = "grid";
+      stopAutoClickLoop(); 
+
 
       // Hide in-game buttons
       el.saveNowBtn.style.display = "none";
@@ -812,6 +818,7 @@ try {
   // --- Final startup tasks ---
   loadPersisted();       // reload persisted state
   updateUI();            // refresh UI with current state
+  try { updateScoreMilestones(state.score); } catch(e) {}
   // ✅ Use realtime listener if available, otherwise fallback
   if (typeof listenToScores === "function") {
     listenToScores();    // Firestore realtime updates
@@ -1059,6 +1066,12 @@ el.clickButton.addEventListener("click", () => {
 
   state.score += Math.floor(gain);
   state.totalClicks += 1;
+  
+  scheduleUpdateUI();
+  checkClickAchievements();
+  scheduleUpdateUI();
+  persist(); 
+
 
   // Record click timestamp for CPS tracking
   try { __clickTimes.push(Date.now()); } catch (e) {}
@@ -1135,7 +1148,7 @@ el.clickButton.addEventListener("click", () => {
   scheduleUpdateUI();                                 // refresh UI
   checkClickAchievements();                           // check for click-related achievements
   scheduleUpdateUI();
-  throttlePersist();
+  persist();  
 });
 
 window.addEventListener("beforeunload", () => {
@@ -1471,32 +1484,7 @@ el.saveNowBtn.addEventListener("click", () => {
   unlockAchievement("💾 Score sauvegardé manuellement.");
 });
 
-/*
- --- Auto-Click Loop ---
- Runs every second.
- - Adds points based on number of auto-clickers and multiplier
- - Applies temporary boost and prestige bonus
- - Updates timed score if in timed mode
- - Ends temporary boost when expired
-*/
-setInterval(() => {
-  if (state.autoClickers > 0) {
-    let gain = state.autoClickers * state.multiplier;
-    if (state.tempBoostActive) gain *= 2;
-    gain *= (1 + state.prestigeBonus / 100);
-    state.score += Math.floor(gain);
-    if (state.timedActive) state.timedScore += Math.floor(gain);
-    scheduleUpdateUI();
-  }
 
-  // End temporary boost if expired
-  const nowAuto = Date.now();
-  if (state.tempBoostActive && nowAuto > state.tempBoostEnd) {
-    state.tempBoostActive = false;
-    unlockAchievement("⚡ Fin du boost de 30s.");
-    scheduleUpdateUI();
-  }
-}, 1000);
 
 /*
  --- Random Bonus Popup ---
@@ -1518,6 +1506,7 @@ if (el.bonusButton) {
     const bonus = Math.floor(100 + Math.random() * 900);
     state.score += bonus;
     if (state.timedActive) state.timedScore += bonus;
+    persist();
 
     el.bonusPopup.textContent = `🎁 Bonus received: +${bonus} points!`;
     el.bonusPopup.style.display = "block";
@@ -1711,6 +1700,9 @@ function checkUpgradeAchievements() {
  Uses a "previous values" cache to avoid unnecessary DOM updates.
 */
 function updateUI() {
+    // mettre à jour la route des paliers en fonction du score actuel
+  try { updateScoreMilestones(state.score); } catch (e) { console.warn(e); }
+
   if (!updateUI._prev) updateUI._prev = {};
   const prev = updateUI._prev;
 
@@ -1725,6 +1717,7 @@ function updateUI() {
   ['upgradeCritChance', ` Crit% (Coût : ${formatNumber(state.critChanceCost)})`],
   ['upgradeCritPower', ` Crit x (Coût : ${formatNumber(state.critPowerCost)})`],
   ['upgradeTempBoost', `Boost 30s (Coût : ${formatNumber(state.tempBoostCost)})`],
+  
 ];
 
 function formatNumber(num) {
@@ -2265,3 +2258,217 @@ setInterval(() => {
     } catch(e){}
   }
 }, 1000);
+
+function persistScoreNow() {
+  try {
+    // on sauvegarde l’état COMPLET
+    localStorage.setItem("clickerState", JSON.stringify(state));
+  } catch (e) {
+    console.warn("persistScoreNow failed", e);
+  }
+}
+
+
+// ===== Route des paliers (basée sur state.score) =====
+const SCORE_MILESTONES = [
+  { id: "poke-ball",   label: "Palier Poké Ball atteint !",   score: 10_000,    img: "img/ball.png" },
+  { id: "super-ball",  label: "Palier Super Ball atteint !",  score: 25_000,    img: "img/super ball.png" },
+  { id: "hyper-ball",  label: "Palier Hyper Ball atteint !",  score: 50_000,    img: "img/hyper ball.png" },
+  { id: "safari-ball", label: "Palier Safari Ball atteint !", score: 100_000,   img: "img/safari ball.png" },
+  { id: "niveau-ball", label: "Palier Niveau Ball atteint !", score: 200_000,   img: "img/niveau ball.png" },
+  { id: "appat-ball",  label: "Palier Appât Ball atteint !",  score: 300_000,   img: "img/appat ball.png" },
+  { id: "lune-ball",   label: "Palier Lune Ball atteint !",   score: 450_000,   img: "img/lune ball.png" },
+  { id: "copain-ball", label: "Palier Copain Ball atteint !", score: 600_000,   img: "img/copain ball.png" },
+  { id: "love-ball",   label: "Palier Love Ball atteint !",   score: 750_000,   img: "img/love ball.png" },
+  { id: "masse-ball",  label: "Palier Masse Ball atteint !",  score: 900_000,   img: "img/masse ball.png" },
+  { id: "speed-ball",  label: "Palier Speed Ball atteint !",  score: 1_100_000, img: "img/speed ball.png" },
+  { id: "luxe-ball",   label: "Palier Luxe Ball atteint !",   score: 1_300_000, img: "img/luxe ball.png" },
+  { id: "honor-ball",  label: "Palier Honor Ball atteint !",  score: 1_500_000, img: "img/honor ball.png" },
+  { id: "memoire-ball",label: "Palier Mémoire Ball atteint !",score: 2_000_000, img: "img/memoire ball.png" },
+  { id: "master-ball", label: "Palier Master Ball atteint !", score: 2_500_000, img: "img/master ball.png" },
+  { id: "ultra-ball",  label: "Palier Ultra Ball atteint !",  score: 3_000_000, img: "img/ultra ball.png" },
+];
+
+
+// ===== Route des paliers =====
+const reachedScoreMilestones = new Set();
+let scoreProgressFill = null;
+let scoreMilestonesInitialized = false;
+
+// affiche 10K / 1.5M au lieu de 10000 / 1500000
+function formatScoreLabel(score) {
+  if (score >= 1_000_000) {
+    // 1M, 2M, 2.5M...
+    const v = score / 1_000_000;
+    return v % 1 === 0 ? v + "M" : v.toFixed(1) + "M";
+  } else if (score >= 1_000) {
+    const v = score / 1_000;
+    return v % 1 === 0 ? v + "K" : v.toFixed(1) + "K";
+  }
+  return String(score);
+}
+
+function initScoreMilestones() {
+  if (scoreMilestonesInitialized) return;
+  if (!el.milestonesWrap) return;
+
+  // la div de fond ▬▬▬▬
+  scoreProgressFill = el.milestonesWrap.querySelector(".progress-fill");
+
+  // on ajoute chaque balle
+  SCORE_MILESTONES.forEach(m => {
+    const wrap = document.createElement("div");
+    wrap.className = "milestone";
+    wrap.id = "score-milestone-" + m.id;
+    wrap.style.filter = "grayscale(1)";
+    wrap.style.opacity = "0.4";
+
+    const img = document.createElement("img");
+    img.src = m.img;
+    img.alt = m.label;
+    img.className = "milestone-img";
+
+    const label = document.createElement("span");
+    label.textContent = formatScoreLabel(m.score);
+
+    wrap.appendChild(img);
+    wrap.appendChild(label);
+    el.milestonesWrap.appendChild(wrap);
+  });
+
+  scoreMilestonesInitialized = true;
+}
+
+function updateScoreMilestones(currentScore) {
+  if (!scoreMilestonesInitialized) initScoreMilestones();
+  if (!scoreMilestonesInitialized) return;
+
+  const milestones = SCORE_MILESTONES;
+  const lastIndex = milestones.length - 1;
+  const lastScore = milestones[lastIndex].score;
+
+  const segmentWidth = 100 / (milestones.length - 1);
+
+  // Facteurs de ralentissement pour les 2 premiers segments
+  const FIRST_SEGMENT_FACTOR = 0.18; // 0 → 10K
+  const SECOND_SEGMENT_FACTOR = 0.8; // 10K → 25K, légèrement plus lent
+
+  const firstScore = milestones[0].score;
+  const secondScore = milestones[1].score;
+
+  // position exacte du premier palier
+  const percentAtFirst = segmentWidth * FIRST_SEGMENT_FACTOR;
+  // position du deuxième palier
+  const percentAtSecond = percentAtFirst + segmentWidth * SECOND_SEGMENT_FACTOR;
+
+  let percent = 0;
+
+  if (currentScore >= lastScore) {
+    percent = 100;
+  } else if (currentScore < firstScore) {
+    // 0 → 10K (ralenti)
+    const part = currentScore / firstScore;
+    percent = part * percentAtFirst;
+  } else if (currentScore < secondScore) {
+    // 10K → 25K (un peu plus lent)
+    const part = (currentScore - firstScore) / (secondScore - firstScore);
+    percent = percentAtFirst + part * (percentAtSecond - percentAtFirst);
+  } else {
+    // reste du parcours (rythme normal)
+    let segIndex = 2;
+    for (let i = 2; i < milestones.length; i++) {
+      if (currentScore < milestones[i].score) {
+        segIndex = i;
+        break;
+      }
+    }
+
+    const prev = milestones[segIndex - 1];
+    const next = milestones[segIndex];
+    const base = percentAtSecond + (segIndex - 2) * segmentWidth;
+    const part = (currentScore - prev.score) / (next.score - prev.score);
+    percent = base + part * segmentWidth;
+  }
+
+  // applique la largeur
+  if (scoreProgressFill) {
+    scoreProgressFill.style.width = Math.min(percent, 100) + "%";
+  }
+
+  // débloquer les paliers atteints
+  milestones.forEach(m => {
+    if (currentScore >= m.score && !reachedScoreMilestones.has(m.id)) {
+      reachedScoreMilestones.add(m.id);
+      const elM = document.getElementById("score-milestone-" + m.id);
+      if (elM) {
+        elM.classList.add("reached");
+        elM.style.filter = "none";
+        elM.style.opacity = "1";
+      }
+      try { showToast(m.label); } catch (e) {}
+    }
+  });
+}
+
+
+
+
+
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    try { persist(); } catch (e) {}
+  }
+});
+
+
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    try { persist(); } catch (e) {}
+  }
+});
+
+// === Gestion de la boucle d'auto-click (pause/reprise selon l'écran) ===
+let autoClickInterval = null;
+
+function startAutoClickLoop() {
+  if (autoClickInterval) return; // déjà en route
+  autoClickInterval = setInterval(() => {
+    let changed = false;
+
+    // Gains des auto-clickers
+    if (state.autoClickers > 0) {
+      let gain = state.autoClickers * state.multiplier;
+      if (state.tempBoostActive) gain *= 2;
+      gain *= (1 + state.prestigeBonus / 100);
+      gain = Math.floor(gain);
+
+      state.score += gain;
+      if (state.timedActive) state.timedScore += gain;
+      changed = true;
+    }
+
+    // Fin du boost temporaire
+    const nowAuto = Date.now();
+    if (state.tempBoostActive && nowAuto > state.tempBoostEnd) {
+      state.tempBoostActive = false;
+      unlockAchievement("⚡ Fin du boost de 30s.");
+      changed = true;
+    }
+
+    if (changed) {
+      scheduleUpdateUI();
+      persist();
+    }
+  }, 1000);
+}
+
+function stopAutoClickLoop() {
+  if (autoClickInterval) {
+    clearInterval(autoClickInterval);
+    autoClickInterval = null;
+  }
+}
+
+

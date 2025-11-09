@@ -38,7 +38,7 @@
     
       <!-- Interrupteur pour les sons -->
   <label class="toggle-switch">
-    <input type="checkbox" id="soundToggle" checked />
+    <input type="checkbox" id="soundToggle" />
     <span class="slider"></span>
     <span>Sons</span>
   </label>
@@ -107,6 +107,20 @@
 
 <!-- Zone de jeu -->
 <main id="gameArea" style="display:none;">
+
+  <!-- route des paliers -->
+<section id="progressRoute">
+<h3 class="route-title">
+  <img src="img/Poké_Ball-LPA.png" alt="Poké Ball" class="route-icon">
+  Route aux Poké Balls
+</h3>  <div id="milestones">
+    
+    <div class="progress-line">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+</section>
+
   <!-- HUD -->
   <section class="hud">
     <div id="score">Score : 0</div>
