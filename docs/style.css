@@ -342,28 +342,44 @@ input[type="text"] {
 ========================= */
 #events { position: relative; }
 
+#clickZone {
+  position: relative; /* absolument nécessaire */
+}
+
 #bonusButton {
-  position: absolute;
-  top: 90px; /* ⇦ ajuste cette valeur pour le descendre plus ou moins bas */
-  right: 20px;
+  position: absolute !important; 
+  top: 120px !important;  
+  left: 10px;
   background: #00d48f;
   color: #203;
-  padding: 10px 16px;
-  border-radius: 10px;
+  padding: 8px 14px;
+  border-radius: 8px;
   font-weight: 800;
   box-shadow: 0 4px 10px rgba(0,0,0,0.25);
   cursor: pointer;
-  z-index: 100;
   display: none;
+  z-index: 50;
   transition: transform 0.2s ease, filter 0.2s ease;
 }
 
+
 #bonusButton:hover {
   transform: scale(1.1);
-  filter: brightness(1.2);
+  filter: brightness(1.15);
 }
 
-
+#bonusPopup {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  z-index: 2000;
+}
 
 .toast {
   position: fixed;
@@ -379,26 +395,40 @@ input[type="text"] {
   z-index: 1000;
 }
 
-/* popup stats */
+
 .stats-popup {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  animation: fadeIn 0.3s ease forwards;
 }
 
 .stats-content {
   background: var(--panel);
-  padding: 20px;
+  padding: 20px 30px;
   border-radius: 12px;
   color: var(--text);
-  width: 300px;
+  width: 320px;
   text-align: left;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  transform: scale(0.95);
+  animation: popIn 0.25s ease forwards;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 
 /* scoreboard / achievements */
 #achievements,

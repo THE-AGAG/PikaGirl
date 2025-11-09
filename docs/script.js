@@ -1005,7 +1005,7 @@ const options = customSelect.querySelectorAll(".options li");
 const savedTheme = localStorage.getItem("theme");
 if (savedTheme) {
   applyTheme(savedTheme); 
-
+  
   const savedOption = [...options].find(opt => opt.dataset.value === savedTheme);
   if (savedOption) {
     const img = savedOption.querySelector("img").src;
@@ -1024,9 +1024,11 @@ options.forEach(opt => {
     const text = opt.textContent.trim();
     const value = opt.dataset.value; 
 
+    // Mets à jour le visuel du sélecteur
     selected.innerHTML = `<img src="${img}"><span>${text}</span>`;
     customSelect.classList.remove("open");
 
+    // Applique et sauvegarde le thème
     applyTheme(value);
     localStorage.setItem("theme", value);
   });
@@ -1852,104 +1854,76 @@ function computeAndDisplayCPS() {
 }
 setInterval(computeAndDisplayCPS, 500); // update twice per second
 
-/*
- --- Bonus Button Placement ---
- Ensures the bonus button always appears directly under the CPS indicator.
-*/
-function showBonusButton() {
-  if (!el.bonusButton) return;
+// état global du bonus
+let bonusCooldownTimer = null;
+let bonusHideTimer = null;
 
-  // Reset claim flag
-  state.bonusActive = false;
+// appelle ça une fois quand le jeu démarre
+startBonusCooldown();
 
-  // Position the bonus button just under the CPS indicator
-  const cpsEl = document.querySelector('.cps-indicator');
-  if (cpsEl) {
-    const rect = cpsEl.getBoundingClientRect();
-    const zoneRect = el.clickZone.getBoundingClientRect();
+const bonusBtn = document.getElementById("bonusButton");
+const bonusPopup = document.getElementById("bonusPopup");
 
-    // Align left with CPS indicator, place 10px below it
-    el.bonusButton.style.position = "absolute";
-    el.bonusButton.style.left = `${rect.left - zoneRect.left}px`;
-    el.bonusButton.style.top = `${rect.bottom - zoneRect.top + 10}px`;
-  }
-
-  el.bonusButton.style.display = "block";
-
-  // Hide after 5s if not clicked
-  setTimeout(() => {
-    el.bonusButton.style.display = "none";
-    startBonusCooldown();
-  }, 5000);
-}
-
-/*
- --- Bonus Button Logic ---
- Grants a random bonus when clicked, only once per spawn.
-*/
-if (el.bonusButton) {
-  el.bonusButton.addEventListener("click", () => {
-    if (state.bonusActive) return; // prevent multiple claims
-    state.bonusActive = true;
-
+// clic sur le bonus
+if (bonusBtn) {
+  bonusBtn.addEventListener("click", () => {
+    // donner le bonus
     const bonus = Math.floor(100 + Math.random() * 900);
     state.score += bonus;
     if (state.timedActive) state.timedScore += bonus;
 
-    el.bonusPopup.textContent = `🎁 Bonus received: +${bonus} points!`;
-    el.bonusPopup.style.display = "block";
-    setTimeout(() => (el.bonusPopup.style.display = "none"), 3000);
+    // message
+    if (bonusPopup) {
+      bonusPopup.textContent = `🎁 Bonus : +${bonus} points !`;
+      bonusPopup.style.display = "block";
+      setTimeout(() => bonusPopup.style.display = "none", 3000);
+    }
 
-    el.bonusButton.style.display = "none"; // hide immediately
-    updateUI();
+    // cacher le bouton
+    bonusBtn.style.display = "none";
+
+    // mettre à jour l’UI du jeu
+    if (typeof updateUI === "function") updateUI();
+
+    // relancer un cooldown
+    startBonusCooldown();
   });
 }
 
-/*
- --- Bonus Cooldown ---
- Shows a countdown until the next bonus appears.
-*/
+// lance un compte à rebours avant le prochain bonus
 function startBonusCooldown() {
-  const timerEl = document.getElementById("bonusTimer");
-  if (!timerEl) {
-    setTimeout(showBonusButton, 15000 + Math.random() * 15000);
-    return;
+  // si un ancien timer existait → on le supprime
+  if (bonusCooldownTimer) {
+    clearTimeout(bonusCooldownTimer);
   }
 
-  let cooldown = 15 + Math.floor(Math.random() * 15); // 15–30s
-  timerEl.style.display = "inline";
-  timerEl.textContent = `⏳ ${cooldown}s`;
+  // cooldown aléatoire entre 15 et 30 secondes
+  const delay = 15000 + Math.random() * 15000;
 
-  const interval = setInterval(() => {
-    cooldown--;
-    if (cooldown > 0) {
-      timerEl.textContent = `⏳ ${cooldown}s`;
-    } else {
-      clearInterval(interval);
-      timerEl.style.display = "none";
-      showBonusButton(); // spawn again
-    }
-  }, 1000);
+  bonusCooldownTimer = setTimeout(() => {
+    showBonusButton();
+  }, delay);
 }
 
+// affiche le bouton dans la zone de jeu
 function showBonusButton() {
   const btn = document.getElementById("bonusButton");
   if (!btn) return;
 
+  // afficher
   btn.style.display = "block";
+  btn.style.pointerEvents = "auto"; // au cas où
 
-  btn.style.position = "absolute"; 
-  btn.style.top = "120px"; 
-  btn.style.right = "20px";
-
-  btn.style.width = "auto";
-  btn.style.background = "#00d48f";
-  btn.style.color = "#203";
-  btn.style.padding = "10px 16px";
-  btn.style.borderRadius = "10px";
-  btn.style.fontWeight = "800";
-  btn.style.boxShadow = "0 4px 10px rgba(0,0,0,0.25)";
-  btn.style.zIndex = "1000";
+  // s'il n'est pas cliqué dans les 5 secondes, on le cache et on relance
+  if (bonusHideTimer) {
+    clearTimeout(bonusHideTimer);
+  }
+  bonusHideTimer = setTimeout(() => {
+    if (btn.style.display !== "none") {
+      btn.style.display = "none";
+      startBonusCooldown();
+    }
+  }, 5000);
 }
 
 
