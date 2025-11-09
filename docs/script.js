@@ -1046,6 +1046,7 @@ el.clickButton.addEventListener("click", () => {
   state.score += 1;
   console.log("Score after:", state.score);
   scheduleUpdateUI();
+  
 
   state.lastClickTime = now;
 
@@ -1134,7 +1135,13 @@ el.clickButton.addEventListener("click", () => {
   scheduleUpdateUI();                                 // refresh UI
   checkClickAchievements();                           // check for click-related achievements
   scheduleUpdateUI();
+  throttlePersist();
 });
+
+window.addEventListener("beforeunload", () => {
+  try { persist(); } catch(e) {}
+});
+
 /*
  --- Make the main image clickable too ---
  Clicking the image triggers the same logic as clicking the main button.
