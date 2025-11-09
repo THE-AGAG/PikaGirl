@@ -1932,6 +1932,27 @@ function startBonusCooldown() {
   }, 1000);
 }
 
+function showBonusButton() {
+  const btn = document.getElementById("bonusButton");
+  if (!btn) return;
+
+  btn.style.display = "block";
+
+  btn.style.position = "absolute"; 
+  btn.style.top = "120px"; 
+  btn.style.right = "20px";
+
+  btn.style.width = "auto";
+  btn.style.background = "#00d48f";
+  btn.style.color = "#203";
+  btn.style.padding = "10px 16px";
+  btn.style.borderRadius = "10px";
+  btn.style.fontWeight = "800";
+  btn.style.boxShadow = "0 4px 10px rgba(0,0,0,0.25)";
+  btn.style.zIndex = "1000";
+}
+
+
 /*
  --- Scoreboard ---
  Saves current score to localStorage and updates leaderboard.

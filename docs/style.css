@@ -342,17 +342,28 @@ input[type="text"] {
 ========================= */
 #events { position: relative; }
 
-.bonus {
+#bonusButton {
   position: absolute;
-  right: 12px;
-  top: -8px;
+  top: 90px; /* ⇦ ajuste cette valeur pour le descendre plus ou moins bas */
+  right: 20px;
   background: #00d48f;
   color: #203;
-  padding: 10px 12px;
+  padding: 10px 16px;
   border-radius: 10px;
   font-weight: 800;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  cursor: pointer;
+  z-index: 100;
+  display: none;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
+
+#bonusButton:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+}
+
+
 
 .toast {
   position: fixed;
