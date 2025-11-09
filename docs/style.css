@@ -288,8 +288,9 @@ input[type="text"] {
   grid-column: 1 / -1;
   text-align: center;
   color: #fff;
-  font-size: 1.1rem;
+  font-size: 20px;
   margin-bottom: 8px;
+  font-weight: 900;
 }
 
 /* même style que tes items */

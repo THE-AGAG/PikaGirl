@@ -1002,6 +1002,18 @@ const customSelect = document.getElementById("themeSelect");
 const selected = customSelect.querySelector(".selected");
 const options = customSelect.querySelectorAll(".options li");
 
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme) {
+  applyTheme(savedTheme); 
+
+  const savedOption = [...options].find(opt => opt.dataset.value === savedTheme);
+  if (savedOption) {
+    const img = savedOption.querySelector("img").src;
+    const text = savedOption.textContent.trim();
+    selected.innerHTML = `<img src="${img}"><span>${text}</span>`;
+  }
+}
+
 selected.addEventListener("click", () => {
   customSelect.classList.toggle("open");
 });
@@ -1009,22 +1021,17 @@ selected.addEventListener("click", () => {
 options.forEach(opt => {
   opt.addEventListener("click", () => {
     const img = opt.querySelector("img").src;
-    const text = opt.textContent;
+    const text = opt.textContent.trim();
     const value = opt.dataset.value; 
 
-    selected.innerHTML = "";
-    const newImg = document.createElement("img");
-    newImg.src = img;
-    selected.appendChild(newImg);
-    const span = document.createElement("span");
-    span.textContent = text.trim();
-    selected.appendChild(span);
-
+    selected.innerHTML = `<img src="${img}"><span>${text}</span>`;
     customSelect.classList.remove("open");
 
     applyTheme(value);
+    localStorage.setItem("theme", value);
   });
 });
+
 
 /*
  --- Main Click Handler ---
