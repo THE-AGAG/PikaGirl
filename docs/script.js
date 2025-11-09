@@ -264,9 +264,9 @@ let __clickTimes = [];
    - src: image file path for the skin
 */
 const SKINS = [
-  { id: 'default', name: 'Par défaut', cost: 0, src: 'img/sacha twerk.gif' },
-  { id: 'gif2', name: 'Rapide', cost: 5000, src: 'img/gif2.gif' },
-  { id: 'pixel', name: 'Pixel', cost: 15000, src: 'img/moyen.gif' },
+  { id: 'default', name: 'défaut', cost: 0, src: 'img/sacha twerk.gif' },
+  { id: 'gif2', name: 'sacha et ondine', cost: 5000, src: 'img/gif2.gif' },
+  { id: 'pixel', name: 'carapuce', cost: 15000, src: 'img/moyen.gif' },
 ];
 
 /*
@@ -746,51 +746,61 @@ el.startBtn.addEventListener("click", () => {
     }
   } catch (e) {}
 
-  // --- Build simple shop skins list ---
-  try {
-    const shop = document.querySelector('.shop');
-    if (shop && !document.getElementById('skinsList')) {
-      const div = document.createElement('div');
-      div.id = 'skinsList';
-      div.style.marginTop = '8px';
-      div.innerHTML = '<h4>Skins</h4>';
+// --- Build simple shop skins list ---
+try {
+  const shop = document.querySelector('.shop');
+  if (shop && !document.getElementById('skinsList')) {
+    const div = document.createElement('div');
+    div.id = 'skinsList';
+    div.className = 'skins-block';
+    div.innerHTML = '<h4>Skins</h4>';
 
-      SKINS.forEach(s => {
-        const b = document.createElement('button');
-        b.className = 'upgrade-btn';
-        b.classList.add('skin-btn'); 
-        b.textContent = `${s.name} (Coût: ${formatNumber(s.cost)})`;
+    SKINS.forEach(s => {
+  const b = document.createElement('button');
+  b.className = 'upgrade-btn skin-btn'; // on garde le même style que les objets
+  b.style.backgroundImage = `url("${s.src}")`;
+  b.style.backgroundSize = '90px 90px';
+  b.style.backgroundPosition = 'top center';
+  b.style.backgroundRepeat = 'no-repeat';
 
-        b.addEventListener('click', () => {
-          const owned = (state.ownedSkins || []).includes(s.id);
-          if (!owned) {
-            // Attempt to buy
-            if (state.score >= s.cost) {
-              state.score -= s.cost;
-              state.ownedSkins = state.ownedSkins || [];
-              state.ownedSkins.push(s.id);
-              state.currentSkin = s.id;
-              el.gameImage.src = s.src;
-              throttlePersist();
-              scheduleUpdateUI();
-            } else {
-              showToast('Pas assez de points pour acheter ce skin.');
-            }
-          } else {
-            // Already owned → just equip
-            state.currentSkin = s.id;
-            el.gameImage.src = s.src;
-            throttlePersist();
-            scheduleUpdateUI();
-          }
-        });
+  // 🔹 On crée un texte séparé en bas (le label)
+  const label = document.createElement('span');
+  label.className = 'upgrade-label';
+  label.textContent = `${s.name} (Coût : ${formatNumber(s.cost)})`;
+  b.appendChild(label);
 
-        div.appendChild(b);
-      });
-
-      shop.appendChild(div);
+  // 🔹 Quand on clique : achat ou sélection
+  b.addEventListener('click', () => {
+    const owned = (state.ownedSkins || []).includes(s.id);
+    if (!owned) {
+      if (state.score >= s.cost) {
+        state.score -= s.cost;
+        state.ownedSkins = state.ownedSkins || [];
+        state.ownedSkins.push(s.id);
+        state.currentSkin = s.id;
+        el.gameImage.src = s.src;
+        throttlePersist();
+        scheduleUpdateUI();
+      } else {
+        showToast('Pas assez de points pour acheter ce skin.');
+      }
+    } else {
+      state.currentSkin = s.id;
+      el.gameImage.src = s.src;
+      throttlePersist();
+      scheduleUpdateUI();
     }
-  } catch (e) {}
+  });
+
+  div.appendChild(b);
+});
+
+
+    shop.appendChild(div);
+  }
+} catch (e) {}
+
+
 
   
   // --- Show in-game buttons ---
